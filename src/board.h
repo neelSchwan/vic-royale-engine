@@ -60,7 +60,7 @@ public:
     ----------------------------------------------------------------------------------------------
     */
 
-    char currentFENString[]; // Lowercase = black pieces, uppercase = white pieces
+    std::string currentFENString; // Lowercase = black pieces, uppercase = white pieces
 
     // Generates the current FEN notation dynamically based on the bitboards for each piece
     std::string generateFEN();
@@ -136,7 +136,7 @@ public:
     */
 
     // Prints the board to the console in a human-readable format (ASCII)
-    void printBoard();
+    void printBitboard(uint64_t bitboard);
 };
 
 #endif // BOARD_H

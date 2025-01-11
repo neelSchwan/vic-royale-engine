@@ -11,10 +11,10 @@ EXEC       = chess_engine
 
 # Source files (adjust as needed)
 SOURCES    = src/main.cpp \
-             src/board.cpp \
-             src/move_generator.cpp \
-             src/search.cpp \
-             src/evaluation.cpp
+             #src/board.cpp \
+             #src/move_generator.cpp \
+             #src/search.cpp \
+             #src/evaluation.cpp
 
 # Object files (automatic substitution: .cpp -> .o)
 OBJECTS    = $(SOURCES:.cpp=.o)
