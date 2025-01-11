@@ -7,6 +7,9 @@
 class Board
 {
 public:
+    
+    // Constructor
+    Board();
     /*
     ----------------------------------------------------------------------------------------------
     Core Data
@@ -23,7 +26,7 @@ public:
     uint64_t whiteKnights;
     uint64_t whiteBishops;
     uint64_t whiteRooks;
-    uint64_t whiteQueens;
+    uint64_t whiteQueen;
     uint64_t whiteKing;
 
     // ------ Black Pieces ------
@@ -31,7 +34,7 @@ public:
     uint64_t blackKnights;
     uint64_t blackBishops;
     uint64_t blackRooks;
-    uint64_t blackQueens;
+    uint64_t blackQueen;
     uint64_t blackKing;
 
     // Castling rights (4 bits: White King-side, White Queen-side, Black King-side, Black Queen-side)
@@ -60,7 +63,7 @@ public:
     char currentFENString[]; // Lowercase = black pieces, uppercase = white pieces
 
     // Generates the current FEN notation dynamically based on the bitboards for each piece
-    void generateFEN();
+    std::string generateFEN();
 
 
     /*
