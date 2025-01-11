@@ -14,4 +14,5 @@ int main() {
     board.printBitboard(board.blackKing);
     board.printBitboard(board.whiteKing);
 
+    std::cout << board.generateFEN();
 }

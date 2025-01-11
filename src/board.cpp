@@ -12,6 +12,7 @@ uint64_t initSquares(std::initializer_list<int> squares) {
 }
 
 Board::Board(){
+
     // White Pieces
     whitePawns   = initSquares({8,9,10,11,12,13,14,15}); // a2, b2, c2, d2, e2, f2, g2, h2
     whiteKnights = initSquares({1,6}); // b1, g1
@@ -29,7 +30,7 @@ Board::Board(){
     blackKing    = initSquares({60}); // e8
 
     castlingRights = 0b1111;
-    enPassantTarget = 0; // Initialize with no en passant target
+    enPassantTarget = 0;
     halfmoveClock = 0;
     fullmoveCounter = 1;
     whiteToMove = true;
@@ -43,4 +44,54 @@ void Board::printBitboard(uint64_t bitboard) {
         }
         std::cout << "\n";
     }
+}
+
+std::string Board::generateFEN() {
+    std::string currentFENString = "";
+    int emptySquares = 0;
+
+    for(int rank = 7; rank >= 0; --rank) {
+        for(int file = 0; file < 8; ++file) {
+            char piece = '\0'; // this defaults to no piece
+
+            int square = rank * 8 + file;
+            if(whitePawns & (1ULL << square)){piece = 'P';}
+            else if(whiteKnights & (1ULL << square)){piece = 'N';}
+            else if(whiteBishops & (1ULL << square)){piece = 'B';}
+            else if(whiteRooks & (1ULL << square)){piece = 'R';}
+            else if(whiteQueen & (1ULL << square)){piece = 'Q';}
+            else if(whiteKing & (1ULL << square)){piece = 'K';}
+            else if(blackPawns & (1ULL << square)){piece = 'p';}
+            else if(blackKnights & (1ULL << square)){piece = 'n';}
+            else if(blackBishops & (1ULL << square)){piece = 'b';}
+            else if(blackRooks & (1ULL << square)){piece = 'r';}
+            else if(blackQueen & (1ULL << square)){piece = 'q';}
+            else if(blackKing & (1ULL << square)){piece = 'k';}
+
+            /*
+            If there is some piece found, and there are empty squares, then we first append the number of emptySquares.
+            If there is some piece found, but there isn't empty squares, then we just add the piece to the currentFenString.
+            */
+            if(piece != '\0') {
+                if(emptySquares > 0) { 
+                    currentFENString +=std::to_string(emptySquares);
+                    emptySquares = 0;
+                }
+                currentFENString += piece;
+            } else {
+                emptySquares++;
+            }
+        }
+
+        if (emptySquares > 0) {
+            currentFENString += std::to_string(emptySquares);
+            emptySquares = 0;
+        }
+
+        if (rank > 0) {
+            currentFENString += "/";
+        }
+    }
+
+    return currentFENString;
 }
