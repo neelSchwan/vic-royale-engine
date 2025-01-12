@@ -46,35 +46,52 @@ void Board::printBitboard(uint64_t bitboard) {
     }
 }
 
+int getSquareFromBitboard(uint64_t bitboard) {
+    if(bitboard == 0) {
+        return -1; // this bitboard is zero / isn't set.
+    }
+
+    return __builtin_ctzll(bitboard); // counts num unset bits before the first set bit.
+}
+
+std::string squareToAlgebraic(int square) {
+    if (square < 0 || square > 63) {
+        throw std::invalid_argument("Square index must be between 0 and 63.");
+    }
+
+    // Calculate file and rank
+    char file = 'a' + (square % 8);
+    char rank = '1' + (square / 8);
+
+    return std::string() + file + rank;
+}
+
 std::string Board::generateFEN() {
     std::string currentFENString = "";
     int emptySquares = 0;
 
-    for(int rank = 7; rank >= 0; --rank) {
-        for(int file = 0; file < 8; ++file) {
-            char piece = '\0'; // this defaults to no piece
-
+    // 1. Piece Placement
+    for (int rank = 7; rank >= 0; --rank) {
+        for (int file = 0; file < 8; ++file) {
+            char piece = '\0';
             int square = rank * 8 + file;
-            if(whitePawns & (1ULL << square)){piece = 'P';}
-            else if(whiteKnights & (1ULL << square)){piece = 'N';}
-            else if(whiteBishops & (1ULL << square)){piece = 'B';}
-            else if(whiteRooks & (1ULL << square)){piece = 'R';}
-            else if(whiteQueen & (1ULL << square)){piece = 'Q';}
-            else if(whiteKing & (1ULL << square)){piece = 'K';}
-            else if(blackPawns & (1ULL << square)){piece = 'p';}
-            else if(blackKnights & (1ULL << square)){piece = 'n';}
-            else if(blackBishops & (1ULL << square)){piece = 'b';}
-            else if(blackRooks & (1ULL << square)){piece = 'r';}
-            else if(blackQueen & (1ULL << square)){piece = 'q';}
-            else if(blackKing & (1ULL << square)){piece = 'k';}
 
-            /*
-            If there is some piece found, and there are empty squares, then we first append the number of emptySquares.
-            If there is some piece found, but there isn't empty squares, then we just add the piece to the currentFenString.
-            */
-            if(piece != '\0') {
-                if(emptySquares > 0) { 
-                    currentFENString +=std::to_string(emptySquares);
+            if (whitePawns & (1ULL << square)) piece = 'P';
+            else if (whiteKnights & (1ULL << square)) piece = 'N';
+            else if (whiteBishops & (1ULL << square)) piece = 'B';
+            else if (whiteRooks & (1ULL << square)) piece = 'R';
+            else if (whiteQueen & (1ULL << square)) piece = 'Q';
+            else if (whiteKing & (1ULL << square)) piece = 'K';
+            else if (blackPawns & (1ULL << square)) piece = 'p';
+            else if (blackKnights & (1ULL << square)) piece = 'n';
+            else if (blackBishops & (1ULL << square)) piece = 'b';
+            else if (blackRooks & (1ULL << square)) piece = 'r';
+            else if (blackQueen & (1ULL << square)) piece = 'q';
+            else if (blackKing & (1ULL << square)) piece = 'k';
+
+            if (piece != '\0') {
+                if (emptySquares > 0) {
+                    currentFENString += std::to_string(emptySquares);
                     emptySquares = 0;
                 }
                 currentFENString += piece;
@@ -93,5 +110,33 @@ std::string Board::generateFEN() {
         }
     }
 
+    // 2. Side to Move
+    currentFENString += " ";
+    currentFENString += (whiteToMove ? "w" : "b");
+
+    // 3. Castling Rights
+    currentFENString += " ";
+    std::string castlingRightsStr = "";
+    if (castlingRights & 0b1000) castlingRightsStr += "K";
+    if (castlingRights & 0b0100) castlingRightsStr += "Q";
+    if (castlingRights & 0b0010) castlingRightsStr += "k";
+    if (castlingRights & 0b0001) castlingRightsStr += "q";
+    if (castlingRightsStr.empty()) castlingRightsStr = "-";
+    currentFENString += castlingRightsStr;
+
+    // 4. En Passant Target
+    currentFENString += " ";
+    if (enPassantTarget != 0) {
+        int epSquare = getSquareFromBitboard(enPassantTarget);
+        currentFENString += squareToAlgebraic(epSquare);
+    } else {
+        currentFENString += "-";
+    }
+
+    // 5. Halfmove Clock and Fullmove Counter
+    currentFENString += " " + std::to_string(halfmoveClock);
+    currentFENString += " " + std::to_string(fullmoveCounter);
+
     return currentFENString;
 }
+
