@@ -1,20 +1,22 @@
 #include <iostream>
 #include <bitset>
 #include "board.h"
+#include <fstream>
+
+void saveFENToFile(const std::string& fen, const std::string& filePath) {
+    std::ofstream outFile(filePath);
+    if (outFile.is_open()) {
+        outFile << fen;
+        outFile.close();
+    } else {
+        std::cerr << "Error: Unable to write to " << filePath << "\n";
+    }
+}
 
 int main() {
 	Board board;
-
-    board.setBoardFromFEN("rnbqk1nr/pppppppp/8/8/8/4P3/PPPP1PPP/RNBQKBNR b KQkq e3 1 5");
-    std::cout << "White pawns:\n";
-    board.printBitboard(board.whitePawns);
-
-    std::cout << board.generateFEN();
-    // std::cout << "Black pawns:\n";
-    // board.printBitboard(board.blackPawns);
-
-    // board.printBitboard(board.blackKing);
-    // board.printBitboard(board.whiteKing);
-
-    // std::cout << board.generateFEN();
+    board.setBoardFromFEN("8/8/8/4p1K1/2k1P3/8/8/8 b - - 0 1");
+    std::string fen = board.generateFEN();
+    saveFENToFile(fen, "src/fen.txt");
+    return 0;
 }

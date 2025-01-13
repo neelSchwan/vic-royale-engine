@@ -159,6 +159,7 @@ std::string Board::generateFEN() {
     return currentFENString;
 }
 
+
 std::vector<std::string> split(const std::string& input, char delim) {
     std::vector<std::string> tokens;
     std::istringstream stream(input);

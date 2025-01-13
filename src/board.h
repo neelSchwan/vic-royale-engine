@@ -68,6 +68,7 @@ public:
     std::string generateFEN();
 
     void setBoardFromFEN(std::string fenNotationStr);
+    
     /*
     ----------------------------------------------------------------------------------------------
     BITBOARD UTILITIES
@@ -142,3 +143,5 @@ public:
 };
 
 #endif // BOARD_H
+
+
