@@ -1,7 +1,10 @@
 #include "board.h"
 #include <string>
 #include <iostream>
+#include <sstream>
+#include <vector>
 #include <initializer_list>
+
 
 uint64_t initSquares(std::initializer_list<int> squares) {
     uint64_t bitboard = 0;
@@ -34,6 +37,22 @@ Board::Board(){
     halfmoveClock = 0;
     fullmoveCounter = 1;
     whiteToMove = true;
+}
+
+void Board::resetBitboards() {
+    whitePawns = 0;
+    whiteKnights = 0;
+    whiteBishops = 0;
+    whiteRooks = 0;
+    whiteQueen = 0;
+    whiteKing = 0;
+
+    blackPawns = 0;
+    blackKnights = 0;
+    blackBishops = 0;
+    blackRooks = 0;
+    blackQueen = 0;
+    blackKing = 0;
 }
 
 void Board::printBitboard(uint64_t bitboard) {
@@ -139,4 +158,89 @@ std::string Board::generateFEN() {
 
     return currentFENString;
 }
+
+std::vector<std::string> split(const std::string& input, char delim) {
+    std::vector<std::string> tokens;
+    std::istringstream stream(input);
+    std::string token;
+
+    while (std::getline(stream, token, delim)) {
+        tokens.push_back(token);
+    }
+
+    return tokens;
+}
+
+void Board::setBoardFromFEN(std::string fenNotationStr) {
+    resetBitboards();
+
+    // Split the FEN string into components
+    std::vector<std::string> fenComponents = split(fenNotationStr, ' ');
+    if (fenComponents.size() != 6) {
+        throw std::invalid_argument("Invalid FEN string: must have exactly 6 components.");
+    }
+
+    for (size_t i = 0; i < fenComponents.size(); ++i) {
+        std::cout << "Component " << i + 1 << ": " << fenComponents[i] << "\n";
+    }
+
+    // Parse Piece Placement
+    std::string piecePlacement = fenComponents[0];
+    int squareIndex = 56; // Start at top-left (rank 8, file a)
+    for (char c : piecePlacement) {
+        if (c == '/') {
+            // Move to the next rank
+            squareIndex -= 16;
+        } else if (isdigit(c)) {
+            // Skip empty squares
+            squareIndex += c - '0';
+        } else {
+            uint64_t mask = (1ULL << squareIndex);
+            switch (c) {
+                case 'P': whitePawns |= mask; break;
+                case 'N': whiteKnights |= mask; break;
+                case 'B': whiteBishops |= mask; break;
+                case 'R': whiteRooks |= mask; break;
+                case 'Q': whiteQueen |= mask; break;
+                case 'K': whiteKing |= mask; break;
+                case 'p': blackPawns |= mask; break;
+                case 'n': blackKnights |= mask; break;
+                case 'b': blackBishops |= mask; break;
+                case 'r': blackRooks |= mask; break;
+                case 'q': blackQueen |= mask; break;
+                case 'k': blackKing |= mask; break;
+                default:
+                    throw std::invalid_argument("Invalid piece character in FEN string.");
+            }
+            squareIndex++;
+        }
+    }
+
+    std::string sideToMove = fenComponents[1];
+    whiteToMove = (sideToMove == "w");
+
+    std::string castlingRightsStr = fenComponents[2];
+    castlingRights = 0;
+    if (castlingRightsStr != "-") {
+        if (castlingRightsStr.find('K') != std::string::npos) castlingRights |= 0b1000;
+        if (castlingRightsStr.find('Q') != std::string::npos) castlingRights |= 0b0100;
+        if (castlingRightsStr.find('k') != std::string::npos) castlingRights |= 0b0010;
+        if (castlingRightsStr.find('q') != std::string::npos) castlingRights |= 0b0001;
+    }
+
+    std::string enPassantStr = fenComponents[3];
+    if (enPassantStr != "-") {
+        int file = enPassantStr[0] - 'a';
+        int rank = enPassantStr[1] - '1';
+        enPassantTarget = (1ULL << (rank * 8 + file));
+    } else {
+        enPassantTarget = 0;
+    }
+
+    halfmoveClock = std::stoi(fenComponents[4]);
+
+    fullmoveCounter = std::stoi(fenComponents[5]);
+}
+
+
 

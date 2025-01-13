@@ -10,6 +10,8 @@ public:
     
     // Constructor
     Board();
+
+    void resetBitboards();
     /*
     ----------------------------------------------------------------------------------------------
     Core Data
@@ -65,7 +67,7 @@ public:
     // Generates the current FEN notation dynamically based on the bitboards for each piece
     std::string generateFEN();
 
-
+    void setBoardFromFEN(std::string fenNotationStr);
     /*
     ----------------------------------------------------------------------------------------------
     BITBOARD UTILITIES
