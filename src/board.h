@@ -3,11 +3,11 @@
 
 #include <cstdint>
 #include <string>
+#include <stack>
 
 class Board
 {
 public:
-    
     // Constructor
     Board();
 
@@ -39,6 +39,18 @@ public:
     uint64_t blackQueen;
     uint64_t blackKing;
 
+    struct Move
+    {
+        int fromSquare;
+        int toSquare;
+        int movedPiece;
+        int capturedPiece;
+        uint8_t prevCastlingRights;
+        uint64_t prevEntPassantTarget;
+        int oldHalfmoveClock;
+        int oldFullmoveCounter;
+    };
+
     // Castling rights (4 bits: White King-side, White Queen-side, Black King-side, Black Queen-side)
     uint8_t castlingRights;
 
@@ -54,6 +66,8 @@ public:
     // Current player to move (true for White, false for Black)
     bool whiteToMove;
 
+    std::stack<Move> moveHistory;
+
     /*
     ----------------------------------------------------------------------------------------------
     FEN NOTATION PARSING
@@ -68,7 +82,7 @@ public:
     std::string generateFEN();
 
     void setBoardFromFEN(std::string fenNotationStr);
-    
+
     /*
     ----------------------------------------------------------------------------------------------
     BITBOARD UTILITIES
@@ -104,7 +118,6 @@ public:
     uint64_t getDiagonalMask(int square);
     uint64_t getAntiDiagonalMask(int square);
 
-
     /*
     ----------------------------------------------------------------------------------------------
     BOARD OPERATIONS
@@ -116,14 +129,11 @@ public:
     */
 
     // Executes a move on the board (e.g., update bitboards, special moves, capture, promotion)
-    void makeMove(int fromSquare, int toSquare, int pieceType, bool isCapture, bool isEnPassant, bool isCastling, int promotionPiece);
+    void makeMove(int fromSquare, int toSquare);
 
     // Undoes the last move, restoring the board to its previous state
     // (Requires storing enough move history to revert changes)
     void undoMove();
-
-    // Checks if a given move is legal (e.g., not leaving own king in check, valid for piece type, etc.)
-    bool isMoveLegal(int fromSquare, int toSquare, int pieceType, bool isCapture, bool isEnPassant, bool isCastling, int promotionPiece);
 
     // Determines if the current player’s king is in check
     bool isCheck();
@@ -131,6 +141,11 @@ public:
     // Determines if the current position is checkmate (king in check + no legal moves)
     bool isCheckmate();
 
+    int findPiece(int square) const;
+
+    void movePiece(int pieceType, int fromSquare, int toSquare);
+    void placePiece(int pieceType, int square);
+    void removePiece(int pieceType, int square);
     /*
     ----------------------------------------------------------------------------------------------
     DEBUGGING
@@ -143,5 +158,3 @@ public:
 };
 
 #endif // BOARD_H
-
-
