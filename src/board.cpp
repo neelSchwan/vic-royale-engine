@@ -433,21 +433,25 @@ void Board::makeMove(int fromSquare, int toSquare)
     int currPiece = findPiece(fromSquare);
     if (currPiece == 0)
     {
-        std::invalid_argument("Square is empty");
+        throw std::invalid_argument("Square is empty");
     }
-    else if (currPiece > 0)
-    {
-        if (!whiteToMove)
-        {
-            std::invalid_argument("Cannot move black pieces as white");
-        }
-    }
-    else
-    {
-        if (whiteToMove)
-        {
-            std::invalid_argument("Cannot move white pieces as black");
-        }
+    // else if (currPiece > 0)
+    // {
+    //     if (!whiteToMove)
+    //     {
+    //         std::invalid_argument("Cannot move black pieces as white");
+    //     }
+    // }
+    // else
+    // {
+    //     if (whiteToMove)
+    //     {
+    //         std::invalid_argument("Cannot move white pieces as black");
+    //     }
+    // }
+
+    if ((currPiece > 0 && !whiteToMove) || (currPiece < 0 && whiteToMove)) {
+        throw std::invalid_argument("Not the correct player's turn.");
     }
 
     // Find any potentially captures pieces
@@ -463,29 +467,67 @@ void Board::makeMove(int fromSquare, int toSquare)
     newMove.prevEntPassantTarget = enPassantTarget;
     newMove.oldHalfmoveClock = halfmoveClock;
     newMove.oldFullmoveCounter = fullmoveCounter;
+
     // Push onto stack and move pieces
     moveHistory.push(newMove);
     if (capPiece != 0)
     {
         removePiece(capPiece, toSquare);
-        halfmoveClock = 0;
     }
-    else
+
+    // move piece from one square to another:
+    movePiece(currPiece, fromSquare, toSquare);
+
+    // handle castling conditions (king)
+    if(abs(currPiece) == 6) 
     {
+        if(currPiece > 0) 
+        {
+            castlingRights &= 0b0011;
+        } else 
+        {
+            castlingRights &= 0b1100;
+        }
+    } 
+    else if(abs(currPiece) == 4) // handle castling conditions (rook);
+    { 
+        if(currPiece > 0) {
+            if(fromSquare == 0) castlingRights &= ~0b0100;
+            if(fromSquare == 7) castlingRights &= ~0b1000;
+        } else {
+            if(fromSquare == 56) castlingRights &= ~0b0001;
+            if(fromSquare == 63) castlingRights &= ~0b0010;
+        }
+    }
+
+    // handle en-passant logic for double-pushed pawns:
+    if(abs(currPiece) == 1) 
+    {
+        if(abs(fromSquare - toSquare) == 16) 
+        {
+            enPassantTarget = (fromSquare + toSquare) / 2;
+        //     std::cout << "enPassantTarget index = " << enPassantTargetIndex 
+        //   << " => " << squareToAlgebraic(enPassantTargetIndex) << "\n";
+
+        } else 
+        {
+            enPassantTarget = 0;
+        }
+    } else {
+        enPassantTarget = 0; // if target piece isn't pawn.
+    }
+
+    // Reset if a pawn moves or if it's a capture, otherwise increment
+    if ((abs(currPiece) == 1) || capPiece != 0) {
+        halfmoveClock = 0;
+    } else {
         halfmoveClock++;
     }
 
-    movePiece(currPiece, fromSquare, toSquare);
-
-    if (abs(currPiece) == 1)
-    {
-        halfmoveClock = 0;
-    }
-
+    // update side logic
     whiteToMove = !whiteToMove;
-    if (!whiteToMove)
-    {
-        fullmoveCounter++;
+    if (!whiteToMove) {
+        fullmoveCounter++; 
     }
 }
 
