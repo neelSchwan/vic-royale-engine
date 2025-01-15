@@ -35,7 +35,7 @@ Board::Board()
     blackKing = initSquares({60});                              // e8
 
     castlingRights = 0b1111;
-    enPassantTarget = 0;
+    enPassantTarget = -1;
     halfmoveClock = 0;
     fullmoveCounter = 1;
     whiteToMove = true;
@@ -181,7 +181,7 @@ std::string Board::generateFEN()
 
     // 4. En Passant Target
     currentFENString += " ";
-    if (enPassantTarget != 0)
+    if (enPassantTarget != -1)
     {
         int epSquare = getSquareFromBitboard(enPassantTarget);
         currentFENString += squareToAlgebraic(epSquare);
@@ -317,7 +317,7 @@ void Board::setBoardFromFEN(std::string fenNotationStr)
     }
     else
     {
-        enPassantTarget = 0;
+        enPassantTarget = -1;
     }
 
     halfmoveClock = std::stoi(fenComponents[4]);
@@ -452,6 +452,17 @@ void Board::makeMove(int fromSquare, int toSquare)
 
     // Find any potentially captures pieces
     int capPiece = findPiece(toSquare);
+
+    if (abs(currPiece) == 1 && abs(fromSquare - toSquare) == 16)
+    {
+        enPassantTarget = (fromSquare + toSquare) / 2;
+
+        std::cout << enPassantTarget;
+    }
+    else
+    {
+        enPassantTarget = -1;
+    }
 
     // Push a new Move onto moveHistory
     Move newMove;
