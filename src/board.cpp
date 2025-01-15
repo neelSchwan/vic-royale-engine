@@ -505,16 +505,17 @@ void Board::makeMove(int fromSquare, int toSquare)
     {
         if(abs(fromSquare - toSquare) == 16) 
         {
-            enPassantTarget = (fromSquare + toSquare) / 2;
+            int epSquareIdx = (fromSquare + toSquare) / 2;
+            enPassantTarget = 1ULL << epSquareIdx;
         //     std::cout << "enPassantTarget index = " << enPassantTargetIndex 
         //   << " => " << squareToAlgebraic(enPassantTargetIndex) << "\n";
 
         } else 
         {
-            enPassantTarget = 0;
+            enPassantTarget = 0ULL;
         }
     } else {
-        enPassantTarget = 0; // if target piece isn't pawn.
+        enPassantTarget = 0ULL; // if target piece isn't pawn.
     }
 
     // Reset if a pawn moves or if it's a capture, otherwise increment

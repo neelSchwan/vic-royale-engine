@@ -28,7 +28,6 @@ int main()
     // Print bitboard for white pawns as a simple example
     std::cout << "White Pawns (initial):\n";
     board.printBitboard(board.whitePawns);
-    std::cout << "\n";
 
     // Example move: e2 (square 12) to e4 (square 28) for White
     int fromSquare = 12; // e2 in 0-based index
