@@ -45,6 +45,7 @@ public:
         int toSquare;
         int movedPiece;
         int capturedPiece;
+        int promotedPiece;
         uint8_t prevCastlingRights;
         uint64_t prevEntPassantTarget;
         int oldHalfmoveClock;
@@ -65,7 +66,6 @@ public:
 
     // Current player to move (true for White, false for Black)
     bool whiteToMove;
-
     std::stack<Move> moveHistory;
 
     /*

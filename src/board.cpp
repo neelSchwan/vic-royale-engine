@@ -489,12 +489,14 @@ void Board::makeMove(int fromSquare, int toSquare)
             castlingRights &= 0b1100;
         }
     } 
-    else if(abs(currPiece) == 4) // handle castling conditions (rook);
+    else if(abs(currPiece) == 4) // handle castling conditions (rook)
     { 
-        if(currPiece > 0) {
+        if(currPiece > 0) 
+        {
             if(fromSquare == 0) castlingRights &= ~0b0100;
             if(fromSquare == 7) castlingRights &= ~0b1000;
-        } else {
+        } else 
+        {
             if(fromSquare == 56) castlingRights &= ~0b0001;
             if(fromSquare == 63) castlingRights &= ~0b0010;
         }
@@ -507,27 +509,46 @@ void Board::makeMove(int fromSquare, int toSquare)
         {
             int epSquareIdx = (fromSquare + toSquare) / 2;
             enPassantTarget = 1ULL << epSquareIdx;
-        //     std::cout << "enPassantTarget index = " << enPassantTargetIndex 
-        //   << " => " << squareToAlgebraic(enPassantTargetIndex) << "\n";
 
         } else 
         {
             enPassantTarget = 0ULL;
         }
-    } else {
+    } else 
+    {
         enPassantTarget = 0ULL; // if target piece isn't pawn.
+    }
+
+    bool isWhitePawn = (currPiece == 1);
+    bool isBlackPawn = (currPiece == -1);
+
+    int toRank = toSquare / 8;
+    if (isWhitePawn && toRank == 7) {
+        removePiece(1, toSquare);
+        placePiece(5, toSquare);
+        newMove.promotedPiece = 5;
+    }
+    else if (isBlackPawn && toRank == 0) {
+        removePiece(-1, toSquare);
+        placePiece(-5, toSquare);
+        newMove.promotedPiece = -5;
+    }
+    else {
+        newMove.promotedPiece = 0;
     }
 
     // Reset if a pawn moves or if it's a capture, otherwise increment
     if ((abs(currPiece) == 1) || capPiece != 0) {
         halfmoveClock = 0;
-    } else {
+    } else 
+    {
         halfmoveClock++;
     }
 
     // update side logic
     whiteToMove = !whiteToMove;
-    if (!whiteToMove) {
+    if (!whiteToMove) 
+    {
         fullmoveCounter++; 
     }
 }
@@ -555,6 +576,15 @@ void Board::undoMove()
 
     // Move the piece back
     movePiece(movedPieceType, toSquare, fromSquare);
+
+    if (lastMove.promotedPiece != 0) {
+        removePiece(lastMove.promotedPiece, fromSquare);
+        if (lastMove.promotedPiece > 0) {
+            placePiece(1, fromSquare);   // White pawn
+        } else {
+            placePiece(-1, fromSquare);  // Black pawn
+        }
+    }
 
     // Restore any captured piece
     if (capturedPieceType != 0)
