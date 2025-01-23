@@ -39,18 +39,29 @@ public:
     uint64_t blackQueen;
     uint64_t blackKing;
 
-    struct Move
+    struct Move {
+    int fromSquare;
+    int toSquare;
+    int movedPiece;
+    int capturedPiece;
+    int promotedPiece;
+    unsigned char prevCastlingRights;
+    uint64_t prevEntPassantTarget;
+    int oldHalfmoveClock;
+    int oldFullmoveCounter;
+
+    bool isCastling;
+    int rookFromSquare;
+    int rookToSquare;
+
+    Move()
+        : fromSquare(0), toSquare(0), movedPiece(0), capturedPiece(0),
+          promotedPiece(0), prevCastlingRights(0), prevEntPassantTarget(0),
+          oldHalfmoveClock(0), oldFullmoveCounter(0), isCastling(false),
+          rookFromSquare(-1), rookToSquare(-1)
     {
-        int fromSquare;
-        int toSquare;
-        int movedPiece;
-        int capturedPiece;
-        int promotedPiece;
-        uint8_t prevCastlingRights;
-        uint64_t prevEntPassantTarget;
-        int oldHalfmoveClock;
-        int oldFullmoveCounter;
-    };
+    }
+};
 
     // Castling rights (4 bits: White King-side, White Queen-side, Black King-side, Black Queen-side)
     uint8_t castlingRights;

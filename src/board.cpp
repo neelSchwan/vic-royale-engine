@@ -429,35 +429,25 @@ void Board::movePiece(int pieceType, int fromSquare, int toSquare)
 
 void Board::makeMove(int fromSquare, int toSquare)
 {
-    // Check if the piece to move belongs to the correct player
+    // 1. Check piece color vs. side to move
     int currPiece = findPiece(fromSquare);
     if (currPiece == 0)
     {
         throw std::invalid_argument("Square is empty");
     }
-    // else if (currPiece > 0)
-    // {
-    //     if (!whiteToMove)
-    //     {
-    //         std::invalid_argument("Cannot move black pieces as white");
-    //     }
-    // }
-    // else
-    // {
-    //     if (whiteToMove)
-    //     {
-    //         std::invalid_argument("Cannot move white pieces as black");
-    //     }
-    // }
-
-    if ((currPiece > 0 && !whiteToMove) || (currPiece < 0 && whiteToMove)) {
-        throw std::invalid_argument("Not the correct player's turn.");
+    else if (currPiece > 0 && !whiteToMove)
+    {
+        throw std::invalid_argument("Cannot move white pieces when it's black's turn");
+    }
+    else if (currPiece < 0 && whiteToMove)
+    {
+        throw std::invalid_argument("Cannot move black pieces when it's white's turn");
     }
 
-    // Find any potentially captures pieces
+    // 2. Find any captured piece (if present)
     int capPiece = findPiece(toSquare);
 
-    // Push a new Move onto moveHistory
+    // 3. Build the Move struct
     Move newMove;
     newMove.fromSquare = fromSquare;
     newMove.toSquare = toSquare;
@@ -467,90 +457,147 @@ void Board::makeMove(int fromSquare, int toSquare)
     newMove.prevEntPassantTarget = enPassantTarget;
     newMove.oldHalfmoveClock = halfmoveClock;
     newMove.oldFullmoveCounter = fullmoveCounter;
+    newMove.isCastling = false;      // default
+    newMove.rookFromSquare = -1;     // default
+    newMove.rookToSquare = -1;       // default
 
-    // Push onto stack and move pieces
-    moveHistory.push(newMove);
+    // 4. Remove captured piece if any
     if (capPiece != 0)
     {
         removePiece(capPiece, toSquare);
+
+        // If we captured a rook in its original square, remove that castling right
+        if (abs(capPiece) == 4)
+        {
+            switch (toSquare)
+            {
+            case 0:  castlingRights &= ~0b0100; break; // White's queenside rook
+            case 7:  castlingRights &= ~0b1000; break; // White's kingside rook
+            case 56: castlingRights &= ~0b0001; break; // Black's queenside rook
+            case 63: castlingRights &= ~0b0010; break; // Black's kingside rook
+            default: break;
+            }
+        }
     }
 
-    // move piece from one square to another:
+    // move the piece on the bitboards
     movePiece(currPiece, fromSquare, toSquare);
 
-    // handle castling conditions (king)
-    if(abs(currPiece) == 6) 
+    // 6. Handle castling rights modifications for moving your own rook or king
+    if (abs(currPiece) == 6)
     {
-        if(currPiece > 0) 
+        if (currPiece > 0)
         {
             castlingRights &= 0b0011;
-        } else 
+
+            // White short castle: e1 (4) -> g1 (6)
+            if (fromSquare == 4 && toSquare == 6)
+            {
+                // Move the rook from h1 (7) to f1 (5)
+                movePiece(4, 7, 5);
+                newMove.isCastling = true;
+                newMove.rookFromSquare = 7;
+                newMove.rookToSquare = 5;
+            }
+            // White long castle: e1 (4) -> c1 (2)
+            else if (fromSquare == 4 && toSquare == 2)
+            {
+                // Move the rook from a1 (0) to d1 (3)
+                movePiece(4, 0, 3);
+                newMove.isCastling = true;
+                newMove.rookFromSquare = 0;
+                newMove.rookToSquare = 3;
+            }
+        }
+        else
         {
             castlingRights &= 0b1100;
+
+            if (fromSquare == 60 && toSquare == 62)
+            {
+                movePiece(-4, 63, 61);
+                newMove.isCastling = true;
+                newMove.rookFromSquare = 63;
+                newMove.rookToSquare = 61;
+            }
+            else if (fromSquare == 60 && toSquare == 58)
+            {
+                movePiece(-4, 56, 59);
+                newMove.isCastling = true;
+                newMove.rookFromSquare = 56;
+                newMove.rookToSquare = 59;
+            }
         }
-    } 
-    else if(abs(currPiece) == 4) // handle castling conditions (rook)
-    { 
-        if(currPiece > 0) 
+    }
+    // If a rook moves from its starting square, remove that specific castling right
+    else if (abs(currPiece) == 4)
+    {
+        if (currPiece > 0) // White Rook
         {
-            if(fromSquare == 0) castlingRights &= ~0b0100;
-            if(fromSquare == 7) castlingRights &= ~0b1000;
-        } else 
+            if (fromSquare == 0) castlingRights &= ~0b0100; // remove White Queenside (Q)
+            if (fromSquare == 7) castlingRights &= ~0b1000; // remove White Kingside (K)
+        }
+        else // Black Rook
         {
-            if(fromSquare == 56) castlingRights &= ~0b0001;
-            if(fromSquare == 63) castlingRights &= ~0b0010;
+            if (fromSquare == 56) castlingRights &= ~0b0001; // remove Black q
+            if (fromSquare == 63) castlingRights &= ~0b0010; // remove Black k
         }
     }
 
-    // handle en-passant logic for double-pushed pawns:
-    if(abs(currPiece) == 1) 
+    if (abs(currPiece) == 1)
     {
-        if(abs(fromSquare - toSquare) == 16) 
+        // double push?
+        if (std::abs(fromSquare - toSquare) == 16)
         {
             int epSquareIdx = (fromSquare + toSquare) / 2;
-            enPassantTarget = 1ULL << epSquareIdx;
-
-        } else 
+            enPassantTarget = (1ULL << epSquareIdx);
+        }
+        else
         {
             enPassantTarget = 0ULL;
         }
-    } else 
+    }
+    else
     {
-        enPassantTarget = 0ULL; // if target piece isn't pawn.
+        enPassantTarget = 0ULL;
     }
 
     bool isWhitePawn = (currPiece == 1);
     bool isBlackPawn = (currPiece == -1);
-
     int toRank = toSquare / 8;
-    if (isWhitePawn && toRank == 7) {
+
+    if (isWhitePawn && toRank == 7)
+    {
         removePiece(1, toSquare);
         placePiece(5, toSquare);
         newMove.promotedPiece = 5;
     }
-    else if (isBlackPawn && toRank == 0) {
+    else if (isBlackPawn && toRank == 0)
+    {
         removePiece(-1, toSquare);
         placePiece(-5, toSquare);
-        newMove.promotedPiece = -5; // gets random num from -5 - 2.
+        newMove.promotedPiece = -5;
     }
-    else {
+    else
+    {
         newMove.promotedPiece = 0;
     }
 
-    // Reset if a pawn moves or if it's a capture, otherwise increment
-    if ((abs(currPiece) == 1) || capPiece != 0) {
+    // 9. Halfmove clock update (reset if pawn move or capture)
+    if (abs(currPiece) == 1 || capPiece != 0)
         halfmoveClock = 0;
-    } else 
-    {
+    else
         halfmoveClock++;
+
+    // 10. Switch side to move; increment fullmoveCounter if black just played
+    whiteToMove = !whiteToMove;
+    if (!whiteToMove)
+    {
+        fullmoveCounter++;
     }
 
-    // update side logic
-    whiteToMove = !whiteToMove;
-    if (!whiteToMove) 
-    {
-        fullmoveCounter++; 
-    }
+    // push the move on the stack
+    moveHistory.push(newMove);
 }
 
 void Board::undoMove()
@@ -563,30 +610,38 @@ void Board::undoMove()
     Move lastMove = moveHistory.top();
     moveHistory.pop();
 
-    int fromSquare = lastMove.fromSquare;
-    int toSquare = lastMove.toSquare;
-    int movedPieceType = lastMove.movedPiece;
-    int capturedPieceType = lastMove.capturedPiece;
+    int fromSquare       = lastMove.fromSquare;
+    int toSquare         = lastMove.toSquare;
+    int movedPieceType   = lastMove.movedPiece;
+    int capturedPieceType= lastMove.capturedPiece;
 
+    // 1. Restore castlingRights, sideToMove, enPassantTarget, halfmove, fullmove
     castlingRights = lastMove.prevCastlingRights;
-    whiteToMove = !whiteToMove;
+    whiteToMove = !whiteToMove;  // we had toggled it in makeMove
     enPassantTarget = lastMove.prevEntPassantTarget;
     halfmoveClock = lastMove.oldHalfmoveClock;
     fullmoveCounter = lastMove.oldFullmoveCounter;
 
-    // Move the piece back
-    movePiece(movedPieceType, toSquare, fromSquare);
-
-    if (lastMove.promotedPiece != 0) {
-        removePiece(lastMove.promotedPiece, fromSquare);
-        if (lastMove.promotedPiece > 0) {
-            placePiece(1, fromSquare);   // White pawn
-        } else {
-            placePiece(-1, fromSquare);  // Black pawn
-        }
+    if (lastMove.promotedPiece != 0)
+    {
+        removePiece(lastMove.promotedPiece, toSquare);
+        // Place the original pawn
+        if (lastMove.promotedPiece > 0)
+            placePiece(1, toSquare);   // White pawn
+        else
+            placePiece(-1, toSquare);  // Black pawn
     }
 
-    // Restore any captured piece
+    // 3. Move the piece back to its original square
+    movePiece(movedPieceType, toSquare, fromSquare);
+
+    if (lastMove.isCastling)
+    {
+        movePiece((movedPieceType > 0 ? 4 : -4),
+                  lastMove.rookToSquare,
+                  lastMove.rookFromSquare);
+    }
+
     if (capturedPieceType != 0)
     {
         placePiece(capturedPieceType, toSquare);
