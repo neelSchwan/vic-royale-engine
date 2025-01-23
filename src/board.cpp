@@ -236,7 +236,7 @@ void Board::setBoardFromFEN(std::string fenNotationStr)
         if (c == '/')
         {
             // Move to the next rank
-            squareIndex -= 16;
+            squareIndex -= 8;
         }
         else if (isdigit(c))
         {
@@ -531,7 +531,7 @@ void Board::makeMove(int fromSquare, int toSquare)
     else if (isBlackPawn && toRank == 0) {
         removePiece(-1, toSquare);
         placePiece(-5, toSquare);
-        newMove.promotedPiece = -5;
+        newMove.promotedPiece = -5; // gets random num from -5 - 2.
     }
     else {
         newMove.promotedPiece = 0;
