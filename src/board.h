@@ -103,6 +103,12 @@ public:
 
     // Keep track of the current FEN for debugging or usage
     std::string currentFENString;
+
+    void generateMoves(std::vector<Move>& moves);
+
+    bool isSquareAttacked(int square, bool byWhite) const;
+    
+    bool isInCheck(bool isWhite) const;
 };
 
 #endif // BOARD_H

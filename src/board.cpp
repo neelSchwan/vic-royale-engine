@@ -376,3 +376,65 @@ void Board::undoMove()
         placePiece(capturedPieceType, toSquare);
     }
 }
+
+
+// ----------- MOVE GENERATION -------------
+
+// Precompute knight attack masks
+constexpr uint64_t knightAttacks(int square) {
+    uint64_t attacks = 0;
+    int x = square % 8, y = square / 8;
+    for (int dx : {-2, -1, 1, 2}) {
+        for (int dy : {-2, -1, 1, 2}) {
+            if (abs(dx) + abs(dy) == 3) {
+                int nx = x + dx, ny = y + dy;
+                if (nx >= 0 && nx < 8 && ny >= 0 && ny < 8)
+                    attacks |= 1ULL << (ny * 8 + nx);
+            }
+        }
+    }
+    return attacks;
+}
+
+// Precompute king attack masks
+constexpr uint64_t kingAttacks(int square) {
+    uint64_t attacks = 0;
+    int x = square % 8, y = square / 8;
+    for (int dx : {-1, 0, 1}) {
+        for (int dy : {-1, 0, 1}) {
+            if (dx == 0 && dy == 0) continue;
+            int nx = x + dx, ny = y + dy;
+            if (nx >= 0 && nx < 8 && ny >= 0 && ny < 8)
+                attacks |= 1ULL << (ny * 8 + nx);
+        }
+    }
+    return attacks;
+}
+
+// Ray attacks for sliding pieces (Bishop/Rook/Queen)
+uint64_t rayAttacks(int square, const std::vector<std::pair<int, int>>& directions, uint64_t occupied) {
+    uint64_t attacks = 0;
+    int x = square % 8, y = square / 8;
+    for (auto [dx, dy] : directions) {
+        for (int step = 1; ; ++step) {
+            int nx = x + dx * step, ny = y + dy * step;
+            if (nx < 0 || nx >= 8 || ny < 0 || ny >= 8) break;
+            int target = ny * 8 + nx;
+            attacks |= 1ULL << target;
+            if (occupied & (1ULL << target)) break;
+        }
+    }
+    return attacks;
+}
+
+// Bishop directions: 4 diagonals
+const std::vector<std::pair<int, int>> bishopDirs = {{1, 1}, {1, -1}, {-1, 1}, {-1, -1}};
+uint64_t bishopAttacks(int square, uint64_t occupied) {
+    return rayAttacks(square, bishopDirs, occupied);
+}
+
+// Rook directions: 4 cardinals
+const std::vector<std::pair<int, int>> rookDirs = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+uint64_t rookAttacks(int square, uint64_t occupied) {
+    return rayAttacks(square, rookDirs, occupied);
+}
