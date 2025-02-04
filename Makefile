@@ -1,30 +1,32 @@
-# -------------------------
-# Simple Makefile for a C++20 Chess Engine
-# -------------------------
+# Compiler and flags
+CXX = g++
+CXXFLAGS = -std=c++17 -Wall -Wextra -O2
 
-CXX        = g++
-CXXFLAGS   = -Wall -Wextra -std=c++20 -O2
-
-EXEC       = chess_engine
+# Output binary
+TARGET = chess
 
 # Source files
-SOURCES    = src/main.cpp \
-             src/board.cpp \
-             #src/move_generator.cpp \
-             #src/search.cpp \
-             #src/evaluation.cpp
+SRC = src/main.cpp src/board.cpp src/fen.cpp src/bitboard.cpp
 
-OBJECTS    = $(SOURCES:.cpp=.o)
+# Object files
+OBJ = $(SRC:.cpp=.o)
 
-all: $(EXEC)
+# Default rule
+all: $(TARGET)
 
-$(EXEC): $(OBJECTS)
-	$(CXX) $(CXXFLAGS) $(OBJECTS) -o $(EXEC)
+# Rule to link the target
+$(TARGET): $(OBJ)
+	@echo "Linking objects to create binary: $@"
+	$(CXX) $(CXXFLAGS) -o $@ $^
 
+# Rule to compile each source file
 %.o: %.cpp
+	@echo "Compiling: $<"
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
+# Clean rule
 clean:
-	rm -f $(OBJECTS) $(EXEC)
+	rm -f $(OBJ) $(TARGET)
 
+# Phony targets
 .PHONY: all clean
