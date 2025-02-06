@@ -1,37 +1,32 @@
-# -------------------------
-# Simple Makefile for a C++20 Chess Engine
-# -------------------------
-
 # Compiler and flags
-CXX        = g++
-CXXFLAGS   = -Wall -Wextra -std=c++20 -O2
+CXX = g++
+CXXFLAGS = -std=c++17 -Wall -Wextra -O2
 
-# Target executable name
-EXEC       = chess_engine
+# Output binary
+TARGET = chess
 
-# Source files (adjust as needed)
-SOURCES    = src/main.cpp \
-             #src/board.cpp \
-             #src/move_generator.cpp \
-             #src/search.cpp \
-             #src/evaluation.cpp
+# Source files
+SRC = src/main.cpp src/board.cpp src/fen.cpp src/bitboard.cpp
 
-# Object files (automatic substitution: .cpp -> .o)
-OBJECTS    = $(SOURCES:.cpp=.o)
+# Object files
+OBJ = $(SRC:.cpp=.o)
 
-# Default target: build the main chess engine
-all: $(EXEC)
+# Default rule
+all: $(TARGET)
 
-# Link step: combine all object files into the final executable
-$(EXEC): $(OBJECTS)
-	$(CXX) $(CXXFLAGS) $(OBJECTS) -o $(EXEC)
+# Rule to link the target
+$(TARGET): $(OBJ)
+	@echo "Linking objects to create binary: $@"
+	$(CXX) $(CXXFLAGS) -o $@ $^
 
-# Compile each .cpp into a .o
+# Rule to compile each source file
 %.o: %.cpp
+	@echo "Compiling: $<"
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-# Clean up compiled files
+# Clean rule
 clean:
-	rm -f $(OBJECTS) $(EXEC)
+	rm -f $(OBJ) $(TARGET)
 
+# Phony targets
 .PHONY: all clean
