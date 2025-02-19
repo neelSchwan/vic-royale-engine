@@ -438,3 +438,339 @@ const std::vector<std::pair<int, int>> rookDirs = {{1, 0}, {-1, 0}, {0, 1}, {0, 
 uint64_t rookAttacks(int square, uint64_t occupied) {
     return rayAttacks(square, rookDirs, occupied);
 }
+
+void Board::generateMoves(std::vector<Move>& moves)
+{
+    moves.clear();
+
+    // Occupied squares by both sides
+    uint64_t occupied =   whitePawns   | whiteKnights | whiteBishops 
+                        | whiteRooks   | whiteQueen   | whiteKing
+                        | blackPawns   | blackKnights | blackBishops
+                        | blackRooks   | blackQueen   | blackKing;
+
+    // Friendly (side to move) and enemy bitboards
+    const bool isWhite = whiteToMove;
+    uint64_t friendly = isWhite 
+      ? (whitePawns | whiteKnights | whiteBishops | whiteRooks | whiteQueen | whiteKing)
+      : (blackPawns | blackKnights | blackBishops | blackRooks | blackQueen | blackKing);
+
+    uint64_t enemy = isWhite
+      ? (blackPawns | blackKnights | blackBishops | blackRooks | blackQueen | blackKing)
+      : (whitePawns | whiteKnights | whiteBishops | whiteRooks | whiteQueen | whiteKing);
+
+    // We will iterate over all 64 squares. 
+    for (int square = 0; square < 64; ++square)
+    {
+        int piece = findPiece(square);
+        if (piece == 0) 
+            continue; // empty
+
+        // If it's not the side to move's piece, skip
+        if ((piece > 0) != isWhite) 
+            continue;
+
+        // --- Generate moves based on piece type ---
+        switch (std::abs(piece))
+        {
+            case 1: // Pawn
+            {
+                // If white: moves go "up" the board (increasing square index by +8).
+                // If black: moves go "down" (decreasing square index by -8).
+                // We'll do a straightforward approach: single step, double step, captures, en passant, etc.
+
+                const int forwardDir = (piece > 0) ? +8 : -8;
+                const int startRank  = (piece > 0) ? 1 : 6;  // white pawns start rank=1, black=6
+                const int rank       = square / 8;
+                const int file       = square % 8;
+
+                // 1) Single pawn push (if target square is free)
+                int forwardSq = square + forwardDir;
+                if (forwardSq >= 0 && forwardSq < 64 && !(occupied & (1ULL << forwardSq)))
+                {
+                    // Create a Move
+                    Board::Move m;
+                    m.fromSquare     = square;
+                    m.toSquare       = forwardSq;
+                    m.movedPiece     = piece;
+                    m.capturedPiece  = 0; // no capture
+                    // We'll fill castling/promotion below if needed
+                    // For a quick addition, check if promotion rank
+                    if ((piece > 0 && rank == 6) || (piece < 0 && rank == 1))
+                    {
+                        // Promotion
+                        m.promotedPiece = (piece > 0) ? 5 : -5; // default to queen
+                    }
+                    else
+                    {
+                        m.promotedPiece = 0;
+                    }
+
+                    moves.push_back(m);
+
+                    // 2) Double pawn push (only if on start rank and single step is free)
+                    if (rank == startRank)
+                    {
+                        int doubleSq = square + 2 * forwardDir;
+                        if (!(occupied & (1ULL << doubleSq)))
+                        {
+                            Board::Move dm;
+                            dm.fromSquare     = square;
+                            dm.toSquare       = doubleSq;
+                            dm.movedPiece     = piece;
+                            dm.capturedPiece  = 0;
+                            dm.promotedPiece  = 0;
+
+                            moves.push_back(dm);
+                        }
+                    }
+                }
+
+                // 3) Pawn captures (left and right diagonals)
+                //   White: left capture => square + 7, right capture => square + 9
+                //   Black: left capture => square - 9, right capture => square - 7
+                // We can do them via (square + forwardDir +/- 1) if we keep track of file constraints.
+                for (int sideCapture : {-1, +1})
+                {
+                    if ((file == 0 && sideCapture == -1) || (file == 7 && sideCapture == +1))
+                        continue; // can't capture off the edge
+
+                    int capSquare = square + forwardDir + sideCapture;
+                    if (capSquare < 0 || capSquare >= 64) 
+                        continue;
+
+                    uint64_t capMask = (1ULL << capSquare);
+                    // normal capture
+                    if (enemy & capMask)
+                    {
+                        Board::Move cm;
+                        cm.fromSquare     = square;
+                        cm.toSquare       = capSquare;
+                        cm.movedPiece     = piece;
+                        cm.capturedPiece  = findPiece(capSquare);
+                        // Check promotion
+                        if ((piece > 0 && rank == 6) || (piece < 0 && rank == 1))
+                            cm.promotedPiece = (piece > 0) ? 5 : -5; // queen
+                        else
+                            cm.promotedPiece = 0;
+
+                        moves.push_back(cm);
+                    }
+                    // en passant capture
+                    if (enPassantTarget != 0ULL && (enPassantTarget & capMask))
+                    {
+                        Board::Move epm;
+                        epm.fromSquare     = square;
+                        epm.toSquare       = capSquare;
+                        epm.movedPiece     = piece;
+                        // The capturedPiece is the pawn on the adjacent rank, i.e. the square behind `capSquare`.
+                        // If White just advanced a black pawn, it would be on 'capSquare - 8' etc.
+                        // But to keep it consistent, your makeMove() logic might handle it. 
+                        // For clarity, let's find that square:
+                        int epCapturedSquare = capSquare + ((piece > 0) ? -8 : +8);
+                        epm.capturedPiece    = findPiece(epCapturedSquare);
+
+                        epm.promotedPiece    = 0; // no direct promotion on en passant
+
+                        moves.push_back(epm);
+                    }
+                }
+                break;
+            }
+            case 2: // Knight
+            {
+                // Use the precomputed or the function knightAttacks(square)
+                uint64_t attacks = knightAttacks(square);
+                // Exclude friendly squares
+                attacks &= ~friendly;
+
+                // For each set bit, create a move
+                while (attacks)
+                {
+                    int to = __builtin_ctzll(attacks); // or use a loop if not using GCC/Clang builtins
+                    attacks &= (attacks - 1); // clear that bit
+
+                    Board::Move km;
+                    km.fromSquare    = square;
+                    km.toSquare      = to;
+                    km.movedPiece    = piece;
+                    km.capturedPiece = (enemy & (1ULL << to)) ? findPiece(to) : 0;
+                    km.promotedPiece = 0;
+
+                    moves.push_back(km);
+                }
+                break;
+            }
+            case 3: // Bishop
+            {
+                uint64_t att = bishopAttacks(square, occupied);
+                // Exclude friendly squares
+                att &= ~friendly;
+
+                // Each set bit is either an empty square or an enemy piece
+                while (att)
+                {
+                    int to = __builtin_ctzll(att);
+                    att &= (att - 1);
+
+                    Board::Move bm;
+                    bm.fromSquare    = square;
+                    bm.toSquare      = to;
+                    bm.movedPiece    = piece;
+                    bm.capturedPiece = (enemy & (1ULL << to)) ? findPiece(to) : 0;
+                    bm.promotedPiece = 0;
+
+                    moves.push_back(bm);
+                }
+                break;
+            }
+            case 4: // Rook
+            {
+                uint64_t att = rookAttacks(square, occupied);
+                att &= ~friendly;
+
+                while (att)
+                {
+                    int to = __builtin_ctzll(att);
+                    att &= (att - 1);
+
+                    Board::Move rm;
+                    rm.fromSquare    = square;
+                    rm.toSquare      = to;
+                    rm.movedPiece    = piece;
+                    rm.capturedPiece = (enemy & (1ULL << to)) ? findPiece(to) : 0;
+                    rm.promotedPiece = 0;
+
+                    moves.push_back(rm);
+                }
+                break;
+            }
+            case 5: // Queen
+            {
+                // Queen attacks = bishop + rook directions
+                uint64_t att = bishopAttacks(square, occupied) | rookAttacks(square, occupied);
+                att &= ~friendly;
+
+                while (att)
+                {
+                    int to = __builtin_ctzll(att);
+                    att &= (att - 1);
+
+                    Board::Move qm;
+                    qm.fromSquare    = square;
+                    qm.toSquare      = to;
+                    qm.movedPiece    = piece;
+                    qm.capturedPiece = (enemy & (1ULL << to)) ? findPiece(to) : 0;
+                    qm.promotedPiece = 0;
+
+                    moves.push_back(qm);
+                }
+                break;
+            }
+            case 6: // King
+            {
+                // Normal moves
+                uint64_t att = kingAttacks(square);
+                // Exclude friendly squares
+                att &= ~friendly;
+
+                while (att)
+                {
+                    int to = __builtin_ctzll(att);
+                    att &= (att - 1);
+
+                    Board::Move km;
+                    km.fromSquare    = square;
+                    km.toSquare      = to;
+                    km.movedPiece    = piece;
+                    km.capturedPiece = (enemy & (1ULL << to)) ? findPiece(to) : 0;
+                    km.promotedPiece = 0;
+
+                    moves.push_back(km);
+                }
+
+                // (Optional) Castling: If you want to generate castling moves here,
+                // you need to check your castlingRights plus ensure the path is free
+                // and your king is not in check. We'll just show the pseudo-legal check.
+                // For White
+                if (piece > 0)
+                {
+                    // White short castle
+                    if (castlingRights & 0b1000) // Suppose this bit is White King-side
+                    {
+                        // squares 5 & 6 must be empty, and the king can't be in check, etc.
+                        // For a pseudo-legal check, we at least verify emptiness:
+                        if (!(occupied & ( (1ULL << 5) | (1ULL << 6) )))
+                        {
+                            Board::Move castleMove;
+                            castleMove.fromSquare = square; // e1
+                            castleMove.toSquare   = 6;      // g1
+                            castleMove.movedPiece = 6;      // White King
+                            castleMove.capturedPiece = 0;
+                            castleMove.isCastling = true;
+                            castleMove.rookFromSquare = 7;  // h1
+                            castleMove.rookToSquare   = 5;  // f1
+                            moves.push_back(castleMove);
+                        }
+                    }
+                    // White long castle
+                    if (castlingRights & 0b0100) // Suppose this bit is White Queen-side
+                    {
+                        // squares 1,2,3 must be empty
+                        if (!(occupied & ( (1ULL << 1) | (1ULL << 2) | (1ULL << 3) )))
+                        {
+                            Board::Move castleMove;
+                            castleMove.fromSquare = square; // e1
+                            castleMove.toSquare   = 2;      // c1
+                            castleMove.movedPiece = 6;      // White King
+                            castleMove.capturedPiece = 0;
+                            castleMove.isCastling = true;
+                            castleMove.rookFromSquare = 0;  // a1
+                            castleMove.rookToSquare   = 3;  // d1
+                            moves.push_back(castleMove);
+                        }
+                    }
+                }
+                else 
+                {
+                    // Black short castle
+                    if (castlingRights & 0b0010) // black king-side
+                    {
+                        // squares 61 & 62 must be empty
+                        if (!(occupied & ( (1ULL << 61) | (1ULL << 62) )))
+                        {
+                            Board::Move castleMove;
+                            castleMove.fromSquare = square; // e8 => 60
+                            castleMove.toSquare   = 62; 
+                            castleMove.movedPiece = -6;   // Black King
+                            castleMove.capturedPiece = 0;
+                            castleMove.isCastling = true;
+                            castleMove.rookFromSquare = 63; // h8
+                            castleMove.rookToSquare   = 61; // f8
+                            moves.push_back(castleMove);
+                        }
+                    }
+                    // Black long castle
+                    if (castlingRights & 0b0001) // black queen-side
+                    {
+                        // squares 57,58,59 must be empty
+                        if (!(occupied & ( (1ULL << 57) | (1ULL << 58) | (1ULL << 59) )))
+                        {
+                            Board::Move castleMove;
+                            castleMove.fromSquare = square; // e8 => 60
+                            castleMove.toSquare   = 58; 
+                            castleMove.movedPiece = -6; // Black King
+                            castleMove.capturedPiece = 0;
+                            castleMove.isCastling = true;
+                            castleMove.rookFromSquare = 56; // a8
+                            castleMove.rookToSquare   = 59; // d8
+                            moves.push_back(castleMove);
+                        }
+                    }
+                }
+                break;
+            } // end king
+        } // end switch
+    } // end for(squares)
+}
+
