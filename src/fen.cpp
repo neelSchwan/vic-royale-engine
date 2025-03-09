@@ -28,7 +28,7 @@ namespace
     {
         if (bitboard == 0ULL)
         {
-            return -1; 
+            return -1;
         }
         // __builtin_ctzll count trailing zeros
         return __builtin_ctzll(bitboard);
@@ -47,8 +47,7 @@ namespace
     }
 } // anonymous namespace
 
-
-std::string generateFEN(const Board& board)
+std::string generateFEN(const Board &board)
 {
     std::string fen;
     int emptySquares = 0;
@@ -63,19 +62,31 @@ std::string generateFEN(const Board& board)
             uint64_t mask = (1ULL << square);
 
             // White
-            if (board.whitePawns   & mask) piece = 'P';
-            else if (board.whiteKnights & mask) piece = 'N';
-            else if (board.whiteBishops & mask) piece = 'B';
-            else if (board.whiteRooks   & mask) piece = 'R';
-            else if (board.whiteQueen   & mask) piece = 'Q';
-            else if (board.whiteKing    & mask) piece = 'K';
+            if (board.whitePawns & mask)
+                piece = 'P';
+            else if (board.whiteKnights & mask)
+                piece = 'N';
+            else if (board.whiteBishops & mask)
+                piece = 'B';
+            else if (board.whiteRooks & mask)
+                piece = 'R';
+            else if (board.whiteQueen & mask)
+                piece = 'Q';
+            else if (board.whiteKing & mask)
+                piece = 'K';
             // Black
-            else if (board.blackPawns   & mask) piece = 'p';
-            else if (board.blackKnights & mask) piece = 'n';
-            else if (board.blackBishops & mask) piece = 'b';
-            else if (board.blackRooks   & mask) piece = 'r';
-            else if (board.blackQueen   & mask) piece = 'q';
-            else if (board.blackKing    & mask) piece = 'k';
+            else if (board.blackPawns & mask)
+                piece = 'p';
+            else if (board.blackKnights & mask)
+                piece = 'n';
+            else if (board.blackBishops & mask)
+                piece = 'b';
+            else if (board.blackRooks & mask)
+                piece = 'r';
+            else if (board.blackQueen & mask)
+                piece = 'q';
+            else if (board.blackKing & mask)
+                piece = 'k';
 
             if (piece != '\0')
             {
@@ -112,11 +123,16 @@ std::string generateFEN(const Board& board)
     fen += " ";
     {
         std::string castling;
-        if (board.castlingRights & 0b1000) castling += "K";
-        if (board.castlingRights & 0b0100) castling += "Q";
-        if (board.castlingRights & 0b0010) castling += "k";
-        if (board.castlingRights & 0b0001) castling += "q";
-        if (castling.empty()) castling = "-";
+        if (board.castlingRights & 0b1000)
+            castling += "K";
+        if (board.castlingRights & 0b0100)
+            castling += "Q";
+        if (board.castlingRights & 0b0010)
+            castling += "k";
+        if (board.castlingRights & 0b0001)
+            castling += "q";
+        if (castling.empty())
+            castling = "-";
         fen += castling;
     }
 
@@ -140,8 +156,7 @@ std::string generateFEN(const Board& board)
     return fen;
 }
 
-
-void setBoardFromFEN(Board& board, const std::string& fenNotationStr)
+void setBoardFromFEN(Board &board, const std::string &fenNotationStr)
 {
     board.resetBitboards();
 
@@ -169,20 +184,44 @@ void setBoardFromFEN(Board& board, const std::string& fenNotationStr)
                 uint64_t mask = (1ULL << squareIndex);
                 switch (c)
                 {
-                    case 'P': board.whitePawns   |= mask; break;
-                    case 'N': board.whiteKnights |= mask; break;
-                    case 'B': board.whiteBishops |= mask; break;
-                    case 'R': board.whiteRooks   |= mask; break;
-                    case 'Q': board.whiteQueen   |= mask; break;
-                    case 'K': board.whiteKing    |= mask; break;
-                    case 'p': board.blackPawns   |= mask; break;
-                    case 'n': board.blackKnights |= mask; break;
-                    case 'b': board.blackBishops |= mask; break;
-                    case 'r': board.blackRooks   |= mask; break;
-                    case 'q': board.blackQueen   |= mask; break;
-                    case 'k': board.blackKing    |= mask; break;
-                    default:
-                        throw std::invalid_argument("Invalid piece char in FEN.");
+                case 'P':
+                    board.whitePawns |= mask;
+                    break;
+                case 'N':
+                    board.whiteKnights |= mask;
+                    break;
+                case 'B':
+                    board.whiteBishops |= mask;
+                    break;
+                case 'R':
+                    board.whiteRooks |= mask;
+                    break;
+                case 'Q':
+                    board.whiteQueen |= mask;
+                    break;
+                case 'K':
+                    board.whiteKing |= mask;
+                    break;
+                case 'p':
+                    board.blackPawns |= mask;
+                    break;
+                case 'n':
+                    board.blackKnights |= mask;
+                    break;
+                case 'b':
+                    board.blackBishops |= mask;
+                    break;
+                case 'r':
+                    board.blackRooks |= mask;
+                    break;
+                case 'q':
+                    board.blackQueen |= mask;
+                    break;
+                case 'k':
+                    board.blackKing |= mask;
+                    break;
+                default:
+                    throw std::invalid_argument("Invalid piece char in FEN.");
                 }
                 squareIndex++;
             }
@@ -198,10 +237,14 @@ void setBoardFromFEN(Board& board, const std::string& fenNotationStr)
         std::string castlingStr = parts[2];
         if (castlingStr != "-")
         {
-            if (castlingStr.find('K') != std::string::npos) board.castlingRights |= 0b1000;
-            if (castlingStr.find('Q') != std::string::npos) board.castlingRights |= 0b0100;
-            if (castlingStr.find('k') != std::string::npos) board.castlingRights |= 0b0010;
-            if (castlingStr.find('q') != std::string::npos) board.castlingRights |= 0b0001;
+            if (castlingStr.find('K') != std::string::npos)
+                board.castlingRights |= 0b1000;
+            if (castlingStr.find('Q') != std::string::npos)
+                board.castlingRights |= 0b0100;
+            if (castlingStr.find('k') != std::string::npos)
+                board.castlingRights |= 0b0010;
+            if (castlingStr.find('q') != std::string::npos)
+                board.castlingRights |= 0b0001;
         }
     }
 
