@@ -530,6 +530,7 @@ uint64_t rookAttacks(int square, uint64_t occupied)
     return rayAttacks(square, rookDirs, occupied);
 }
 
+
 uint64_t allPieces(const Board &board)
 {
     return board.whitePawns | board.whiteKnights | board.whiteBishops |
@@ -1138,3 +1139,4 @@ int Board::evaluatePosition() const
     // Always return score from White's perspective
     return score;
 }
+
