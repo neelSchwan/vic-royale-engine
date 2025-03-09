@@ -16,7 +16,7 @@ uint64_t Board::zobristCastling[16];
 uint64_t Board::zobristEnPassant[8];
 
 const std::vector<std::pair<int, int>> bishopDirs = {{1, 1}, {1, -1}, {-1, 1}, {-1, -1}};
-const std::vector<std::pair<int, int>> rookDirs = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+const std::vector<std::pair<int, int>> rookDirs = {{0, 1}, {0, -1}, {1, 0}, {-1, 0}};
 
 // Piece-Square Tables for positional evaluation
 const int PAWN_TABLE[64] = {
@@ -245,7 +245,7 @@ void Board::removePiece(int pieceType, int square)
 }
 
 // ---------- printBitboard ----------
-void Board::printBitboard(uint64_t bitboard)
+void Board::printBitboard(uint64_t bitboard) const
 {
     for (int rank = 7; rank >= 0; --rank)
     {
@@ -281,6 +281,11 @@ void Board::makeMove(int fromSquare, int toSquare)
     {
         if (move.fromSquare == fromSquare && move.toSquare == toSquare)
         {
+            // Additional check validation
+            if (wouldLeaveInCheck(move))
+            {
+                throw std::invalid_argument("Move would leave king in check");
+            }
             moveFound = true;
             selectedMove = move;
             break;
@@ -502,15 +507,22 @@ uint64_t rayAttacks(int square, const std::vector<std::pair<int, int>> &directio
 {
     uint64_t attacks = 0;
     int x = square % 8, y = square / 8;
+
     for (auto [dx, dy] : directions)
     {
-        for (int step = 1;; ++step)
+        int nx = x, ny = y;
+        while (true)
         {
-            int nx = x + dx * step, ny = y + dy * step;
+            nx += dx;
+            ny += dy;
+            // Check if we went off the board
             if (nx < 0 || nx >= 8 || ny < 0 || ny >= 8)
                 break;
+
             int target = ny * 8 + nx;
             attacks |= 1ULL << target;
+
+            // If we hit a piece, stop in this direction (but include the square in attacks)
             if (occupied & (1ULL << target))
                 break;
         }
@@ -518,13 +530,53 @@ uint64_t rayAttacks(int square, const std::vector<std::pair<int, int>> &directio
     return attacks;
 }
 
-// Bishop directions: 4 diagonals
+// Helper to calculate bishop attacks for a specific square
 uint64_t bishopAttacks(int square, uint64_t occupied)
 {
-    return rayAttacks(square, bishopDirs, occupied);
+    // Get vectors for each of the 4 diagonal directions
+    uint64_t attacks = 0;
+    int x = square % 8, y = square / 8;
+
+    // Up-right diagonal
+    for (int i = 1; x + i < 8 && y + i < 8; i++)
+    {
+        int target = (y + i) * 8 + (x + i);
+        attacks |= 1ULL << target;
+        if (occupied & (1ULL << target))
+            break;
+    }
+
+    // Up-left diagonal
+    for (int i = 1; x - i >= 0 && y + i < 8; i++)
+    {
+        int target = (y + i) * 8 + (x - i);
+        attacks |= 1ULL << target;
+        if (occupied & (1ULL << target))
+            break;
+    }
+
+    // Down-right diagonal
+    for (int i = 1; x + i < 8 && y - i >= 0; i++)
+    {
+        int target = (y - i) * 8 + (x + i);
+        attacks |= 1ULL << target;
+        if (occupied & (1ULL << target))
+            break;
+    }
+
+    // Down-left diagonal
+    for (int i = 1; x - i >= 0 && y - i >= 0; i++)
+    {
+        int target = (y - i) * 8 + (x - i);
+        attacks |= 1ULL << target;
+        if (occupied & (1ULL << target))
+            break;
+    }
+
+    return attacks;
 }
 
-// Rook directions: 4 cardinals
+// Rook directions: 4 cardinals using rayAttacks
 uint64_t rookAttacks(int square, uint64_t occupied)
 {
     return rayAttacks(square, rookDirs, occupied);
@@ -578,6 +630,7 @@ int findLSB(uint64_t bitboard)
 std::vector<Board::Move> generateMoves(Board &board)
 {
     std::vector<Board::Move> moves;
+    std::vector<Board::Move> legalMoves;
     uint64_t friendly = friendlyPieces(board);
     uint64_t enemy = enemyPieces(board);
     uint64_t all = allPieces(board);
@@ -966,7 +1019,17 @@ std::vector<Board::Move> generateMoves(Board &board)
             }
         }
     }
-    return moves;
+
+    // Filter out moves that would leave the king in check
+    for (const Board::Move &move : moves)
+    {
+        if (!board.wouldLeaveInCheck(move))
+        {
+            legalMoves.push_back(move);
+        }
+    }
+
+    return legalMoves;
 }
 
 // perft: recursively counts leaf nodes up to a given depth
@@ -1137,4 +1200,264 @@ int Board::evaluatePosition() const
 
     // Always return score from White's perspective
     return score;
+}
+
+bool Board::isInCheck(bool isWhiteKing) const
+{
+    // Find king's position
+    uint64_t kingBB = isWhiteKing ? whiteKing : blackKing;
+    if (!kingBB)
+        return false; // No king (shouldn't happen in a legal position)
+    int kingSquare = findLSB(kingBB);
+
+    // All pieces for blocking
+    uint64_t allPieces = whitePawns | whiteKnights | whiteBishops | whiteRooks | whiteQueen | whiteKing |
+                         blackPawns | blackKnights | blackBishops | blackRooks | blackQueen | blackKing;
+
+    // Check for pawn attacks
+    uint64_t pawnAttacks = 0ULL;
+    if (isWhiteKing)
+    {
+        // Black pawns attacking white king
+        if (kingSquare % 8 > 0) // Not on A file
+            pawnAttacks |= 1ULL << (kingSquare - 9);
+        if (kingSquare % 8 < 7) // Not on H file
+            pawnAttacks |= 1ULL << (kingSquare - 7);
+        if (pawnAttacks & blackPawns)
+            return true;
+    }
+    else
+    {
+        // White pawns attacking black king
+        if (kingSquare % 8 > 0) // Not on A file
+            pawnAttacks |= 1ULL << (kingSquare + 7);
+        if (kingSquare % 8 < 7) // Not on H file
+            pawnAttacks |= 1ULL << (kingSquare + 9);
+        if (pawnAttacks & whitePawns)
+            return true;
+    }
+
+    // Check for knight attacks
+    uint64_t enemyKnights = isWhiteKing ? blackKnights : whiteKnights;
+    if (knightAttacks(kingSquare) & enemyKnights)
+        return true;
+
+    // Get enemy pieces
+    uint64_t enemyQueen = isWhiteKing ? blackQueen : whiteQueen;
+    uint64_t enemyBishops = isWhiteKing ? blackBishops : whiteBishops;
+    uint64_t enemyRooks = isWhiteKing ? blackRooks : whiteRooks;
+
+    // Check for bishop attacks (including queen's diagonal attacks)
+    uint64_t bishopAttackers = enemyBishops | enemyQueen;
+    while (bishopAttackers)
+    {
+        int sq = findLSB(bishopAttackers);
+        bishopAttackers &= (bishopAttackers - 1);
+        if (bishopAttacks(sq, allPieces) & kingBB)
+            return true;
+    }
+
+    // Check for rook attacks (including queen's orthogonal attacks)
+    uint64_t rookAttackers = enemyRooks | enemyQueen;
+    while (rookAttackers)
+    {
+        int sq = findLSB(rookAttackers);
+        rookAttackers &= (rookAttackers - 1);
+        if (rookAttacks(sq, allPieces) & kingBB)
+            return true;
+    }
+
+    // Check for adjacent kings (rare but possible)
+    uint64_t enemyKing = isWhiteKing ? blackKing : whiteKing;
+    if (kingAttacks(kingSquare) & enemyKing)
+        return true;
+
+    return false;
+}
+
+bool Board::isCurrentPlayerInCheck() const
+{
+    // If it's white's turn, we check if white's king is in check
+    // If it's black's turn, we check if black's king is in check
+    return isInCheck(whiteToMove);
+}
+
+bool Board::isCheckmate() const
+{
+    if (!isCurrentPlayerInCheck())
+        return false;
+
+    // Generate all possible moves
+    std::vector<Move> moves = generateMoves(const_cast<Board &>(*this));
+
+    // Try each move to see if it gets us out of check
+    for (const Move &move : moves)
+    {
+        if (!wouldLeaveInCheck(move))
+            return false;
+    }
+
+    return true;
+}
+
+bool Board::isStalemate() const
+{
+    if (isCurrentPlayerInCheck())
+        return false;
+
+    // Generate all possible moves
+    std::vector<Move> moves = generateMoves(const_cast<Board &>(*this));
+
+    // If there are no legal moves and we're not in check, it's stalemate
+    for (const Move &move : moves)
+    {
+        if (!wouldLeaveInCheck(move))
+            return false;
+    }
+
+    return true;
+}
+
+bool Board::wouldLeaveInCheck(const Move &move) const
+{
+    return wouldLeaveInCheck(move.fromSquare, move.toSquare);
+}
+
+bool Board::wouldLeaveInCheck(int from, int to, Board::PieceType promotion) const
+{
+    // Make a copy of the current board
+    Board tempBoard = *this;
+
+    // Get the piece being moved
+    uint64_t fromBB = 1ULL << from;
+    uint64_t toBB = 1ULL << to;
+
+    // Remove piece from source square
+    if (fromBB & tempBoard.whitePawns)
+        tempBoard.whitePawns &= ~fromBB;
+    else if (fromBB & tempBoard.whiteKnights)
+        tempBoard.whiteKnights &= ~fromBB;
+    else if (fromBB & tempBoard.whiteBishops)
+        tempBoard.whiteBishops &= ~fromBB;
+    else if (fromBB & tempBoard.whiteRooks)
+        tempBoard.whiteRooks &= ~fromBB;
+    else if (fromBB & tempBoard.whiteQueen)
+        tempBoard.whiteQueen &= ~fromBB;
+    else if (fromBB & tempBoard.whiteKing)
+        tempBoard.whiteKing &= ~fromBB;
+    else if (fromBB & tempBoard.blackPawns)
+        tempBoard.blackPawns &= ~fromBB;
+    else if (fromBB & tempBoard.blackKnights)
+        tempBoard.blackKnights &= ~fromBB;
+    else if (fromBB & tempBoard.blackBishops)
+        tempBoard.blackBishops &= ~fromBB;
+    else if (fromBB & tempBoard.blackRooks)
+        tempBoard.blackRooks &= ~fromBB;
+    else if (fromBB & tempBoard.blackQueen)
+        tempBoard.blackQueen &= ~fromBB;
+    else if (fromBB & tempBoard.blackKing)
+        tempBoard.blackKing &= ~fromBB;
+
+    // Remove any captured piece from destination square
+    if (toBB & tempBoard.whitePawns)
+        tempBoard.whitePawns &= ~toBB;
+    else if (toBB & tempBoard.whiteKnights)
+        tempBoard.whiteKnights &= ~toBB;
+    else if (toBB & tempBoard.whiteBishops)
+        tempBoard.whiteBishops &= ~toBB;
+    else if (toBB & tempBoard.whiteRooks)
+        tempBoard.whiteRooks &= ~toBB;
+    else if (toBB & tempBoard.whiteQueen)
+        tempBoard.whiteQueen &= ~toBB;
+    else if (toBB & tempBoard.whiteKing)
+        tempBoard.whiteKing &= ~toBB;
+    else if (toBB & tempBoard.blackPawns)
+        tempBoard.blackPawns &= ~toBB;
+    else if (toBB & tempBoard.blackKnights)
+        tempBoard.blackKnights &= ~toBB;
+    else if (toBB & tempBoard.blackBishops)
+        tempBoard.blackBishops &= ~toBB;
+    else if (toBB & tempBoard.blackRooks)
+        tempBoard.blackRooks &= ~toBB;
+    else if (toBB & tempBoard.blackQueen)
+        tempBoard.blackQueen &= ~toBB;
+    else if (toBB & tempBoard.blackKing)
+        tempBoard.blackKing &= ~toBB;
+
+    // Add piece to destination square
+    if (promotion == NONE)
+    {
+        // Normal move
+        if (fromBB & whitePawns)
+            tempBoard.whitePawns |= toBB;
+        else if (fromBB & whiteKnights)
+            tempBoard.whiteKnights |= toBB;
+        else if (fromBB & whiteBishops)
+            tempBoard.whiteBishops |= toBB;
+        else if (fromBB & whiteRooks)
+            tempBoard.whiteRooks |= toBB;
+        else if (fromBB & whiteQueen)
+            tempBoard.whiteQueen |= toBB;
+        else if (fromBB & whiteKing)
+            tempBoard.whiteKing |= toBB;
+        else if (fromBB & blackPawns)
+            tempBoard.blackPawns |= toBB;
+        else if (fromBB & blackKnights)
+            tempBoard.blackKnights |= toBB;
+        else if (fromBB & blackBishops)
+            tempBoard.blackBishops |= toBB;
+        else if (fromBB & blackRooks)
+            tempBoard.blackRooks |= toBB;
+        else if (fromBB & blackQueen)
+            tempBoard.blackQueen |= toBB;
+        else if (fromBB & blackKing)
+            tempBoard.blackKing |= toBB;
+    }
+    else
+    {
+        // Promotion
+        if (whiteToMove)
+        {
+            switch (promotion)
+            {
+            case QUEEN:
+                tempBoard.whiteQueen |= toBB;
+                break;
+            case ROOK:
+                tempBoard.whiteRooks |= toBB;
+                break;
+            case BISHOP:
+                tempBoard.whiteBishops |= toBB;
+                break;
+            case KNIGHT:
+                tempBoard.whiteKnights |= toBB;
+                break;
+            default:
+                break;
+            }
+        }
+        else
+        {
+            switch (promotion)
+            {
+            case QUEEN:
+                tempBoard.blackQueen |= toBB;
+                break;
+            case ROOK:
+                tempBoard.blackRooks |= toBB;
+                break;
+            case BISHOP:
+                tempBoard.blackBishops |= toBB;
+                break;
+            case KNIGHT:
+                tempBoard.blackKnights |= toBB;
+                break;
+            default:
+                break;
+            }
+        }
+    }
+
+    // Check if the current player's king is in check after the move
+    return tempBoard.isInCheck(whiteToMove);
 }
