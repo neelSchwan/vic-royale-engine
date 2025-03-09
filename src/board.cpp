@@ -582,6 +582,7 @@ uint64_t rookAttacks(int square, uint64_t occupied)
     return rayAttacks(square, rookDirs, occupied);
 }
 
+
 uint64_t allPieces(const Board &board)
 {
     return board.whitePawns | board.whiteKnights | board.whiteBishops |
@@ -1461,3 +1462,4 @@ bool Board::wouldLeaveInCheck(int from, int to, Board::PieceType promotion) cons
     // Check if the current player's king is in check after the move
     return tempBoard.isInCheck(whiteToMove);
 }
+
