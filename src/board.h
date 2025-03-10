@@ -4,14 +4,18 @@
 #include <cstdint>
 #include <string>
 #include <stack>
+#include <vector>
+#include <initializer_list>
 
 /**
  * Represents a chess board using bitboards.
  */
 class Board
 {
-public:
+private:
+    static void initZobrist();
 
+public:
     Board();
 
     // ----------------------------------
@@ -46,8 +50,11 @@ public:
     // Current player to move (true for White, false for Black)
     bool whiteToMove;
 
-    // Move structure
-    struct Move {
+    // ----------------------------------
+    // Move Structure
+    // ----------------------------------
+    struct Move
+    {
         int fromSquare;
         int toSquare;
         int movedPiece;
@@ -98,17 +105,23 @@ public:
      */
     void removePiece(int pieceType, int square);
 
-    // Debug
+    // Debug: prints an 8x8 grid for a given bitboard.
     void printBitboard(uint64_t bitboard);
 
-    // Keep track of the current FEN for debugging or usage
-    std::string currentFENString;
+    // Zobrist hashing tables
+    static uint64_t zobristTable[12][64];
+    static uint64_t zobristBlackToMove;
+    static uint64_t zobristCastling[16];
+    static uint64_t zobristEnPassant[8];
 
-    void generateMoves(std::vector<Move>& moves);
-
-    bool isSquareAttacked(int square, bool byWhite) const;
-    
-    bool isInCheck(bool isWhite) const;
+    // ----------------------------------
+    // Position evaluation and hashing
+    // ----------------------------------
+    uint64_t calculatePositionKey() const;
+    int evaluatePosition() const;
 };
+
+std::vector<Board::Move> generateMoves(Board &board);
+uint64_t perft(Board &board, int depth);
 
 #endif // BOARD_H
