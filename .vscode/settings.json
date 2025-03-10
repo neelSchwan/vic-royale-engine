@@ -71,6 +71,8 @@
         "type_traits": "cpp",
         "utility": "cpp",
         "format": "cpp",
-        "cinttypes": "cpp"
+        "cinttypes": "cpp",
+        "stack": "cpp",
+        "chrono": "cpp"
     }
 }

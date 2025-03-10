@@ -466,7 +466,6 @@ void Board::generateMoves(std::vector<Move>& moves)
         if (piece == 0) 
             continue; // empty
 
-        // If it's not the side to move's piece, skip
         if ((piece > 0) != isWhite) 
             continue;
 
@@ -477,14 +476,13 @@ void Board::generateMoves(std::vector<Move>& moves)
             {
                 // If white: moves go "up" the board (increasing square index by +8).
                 // If black: moves go "down" (decreasing square index by -8).
-                // We'll do a straightforward approach: single step, double step, captures, en passant, etc.
 
                 const int forwardDir = (piece > 0) ? +8 : -8;
                 const int startRank  = (piece > 0) ? 1 : 6;  // white pawns start rank=1, black=6
                 const int rank       = square / 8;
                 const int file       = square % 8;
 
-                // 1) Single pawn push (if target square is free)
+                // Single pawn push (if target square is free)
                 int forwardSq = square + forwardDir;
                 if (forwardSq >= 0 && forwardSq < 64 && !(occupied & (1ULL << forwardSq)))
                 {
@@ -494,8 +492,6 @@ void Board::generateMoves(std::vector<Move>& moves)
                     m.toSquare       = forwardSq;
                     m.movedPiece     = piece;
                     m.capturedPiece  = 0; // no capture
-                    // We'll fill castling/promotion below if needed
-                    // For a quick addition, check if promotion rank
                     if ((piece > 0 && rank == 6) || (piece < 0 && rank == 1))
                     {
                         // Promotion
@@ -508,7 +504,6 @@ void Board::generateMoves(std::vector<Move>& moves)
 
                     moves.push_back(m);
 
-                    // 2) Double pawn push (only if on start rank and single step is free)
                     if (rank == startRank)
                     {
                         int doubleSq = square + 2 * forwardDir;
@@ -529,7 +524,7 @@ void Board::generateMoves(std::vector<Move>& moves)
                 // 3) Pawn captures (left and right diagonals)
                 //   White: left capture => square + 7, right capture => square + 9
                 //   Black: left capture => square - 9, right capture => square - 7
-                // We can do them via (square + forwardDir +/- 1) if we keep track of file constraints.
+                // We can do them via (square + forwardDir +/- 1).
                 for (int sideCapture : {-1, +1})
                 {
                     if ((file == 0 && sideCapture == -1) || (file == 7 && sideCapture == +1))
@@ -565,8 +560,6 @@ void Board::generateMoves(std::vector<Move>& moves)
                         epm.movedPiece     = piece;
                         // The capturedPiece is the pawn on the adjacent rank, i.e. the square behind `capSquare`.
                         // If White just advanced a black pawn, it would be on 'capSquare - 8' etc.
-                        // But to keep it consistent, your makeMove() logic might handle it. 
-                        // For clarity, let's find that square:
                         int epCapturedSquare = capSquare + ((piece > 0) ? -8 : +8);
                         epm.capturedPiece    = findPiece(epCapturedSquare);
 
@@ -587,7 +580,7 @@ void Board::generateMoves(std::vector<Move>& moves)
                 // For each set bit, create a move
                 while (attacks)
                 {
-                    int to = __builtin_ctzll(attacks); // or use a loop if not using GCC/Clang builtins
+                    int to = __builtin_ctzll(attacks);
                     attacks &= (attacks - 1); // clear that bit
 
                     Board::Move km;
@@ -689,17 +682,12 @@ void Board::generateMoves(std::vector<Move>& moves)
                     moves.push_back(km);
                 }
 
-                // (Optional) Castling: If you want to generate castling moves here,
-                // you need to check your castlingRights plus ensure the path is free
-                // and your king is not in check. We'll just show the pseudo-legal check.
-                // For White
                 if (piece > 0)
                 {
                     // White short castle
                     if (castlingRights & 0b1000) // Suppose this bit is White King-side
                     {
                         // squares 5 & 6 must be empty, and the king can't be in check, etc.
-                        // For a pseudo-legal check, we at least verify emptiness:
                         if (!(occupied & ( (1ULL << 5) | (1ULL << 6) )))
                         {
                             Board::Move castleMove;
