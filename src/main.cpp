@@ -7,6 +7,9 @@
 #include "board.h"
 #include "fen.h"
 
+// Forward declaration of existing function
+extern int findLSB(uint64_t bitboard);
+
 void saveFENToFile(const std::string &fen, const std::string &filePath)
 {
     std::ofstream outFile(filePath);
@@ -254,6 +257,237 @@ void testPieceMovement(Board &board)
     board.undoMove();
 }
 
+void testCheckDetection(Board &board)
+{
+    printTestHeader("Check Detection");
+
+    // Print coordinates for all squares to help debug
+    std::cout << "Coordinate reference (rank/file):\n";
+    for (int rank = 7; rank >= 0; --rank)
+    {
+        for (int file = 0; file < 8; ++file)
+        {
+            int square = rank * 8 + file;
+            std::cout << square << "(" << file << "/" << rank << ")\t";
+        }
+        std::cout << "\n";
+    }
+
+    // Test 1: Create a simple check position
+    std::cout << "Testing simple check position...\n";
+
+    // Create a board with only a white queen and black king
+    Board checkBoard;
+    checkBoard.resetBitboards();
+    checkBoard.whiteQueen = 1ULL << 53; // f7
+    checkBoard.blackKing = 1ULL << 60;  // e8
+    checkBoard.whiteToMove = true;      // White to move
+
+    std::cout << "White queen at square 53 (f7)\n";
+    std::cout << "Black king at square 60 (e8)\n";
+
+    std::cout << "DEBUG: White queen position:\n";
+    checkBoard.printBitboard(checkBoard.whiteQueen);
+    std::cout << "DEBUG: Black king position:\n";
+    checkBoard.printBitboard(checkBoard.blackKing);
+    std::cout << "DEBUG: All pieces:\n";
+    checkBoard.printBitboard(checkBoard.whitePawns | checkBoard.whiteKnights | checkBoard.whiteBishops |
+                             checkBoard.whiteRooks | checkBoard.whiteQueen | checkBoard.whiteKing |
+                             checkBoard.blackPawns | checkBoard.blackKnights | checkBoard.blackBishops |
+                             checkBoard.blackRooks | checkBoard.blackQueen | checkBoard.blackKing);
+
+    // Manually check if the black king is in check
+    bool blackInCheck = checkBoard.isInCheck(false);
+    std::cout << "DEBUG: Manual check - black king in check: " << (blackInCheck ? "true" : "false") << "\n";
+
+    // Draw a diagonal line from the queen to the king to show the attack path
+    std::cout << "Checking direct line from queen (f7) to king (e8):\n";
+    int queenX = 53 % 8; // f file (5)
+    int queenY = 53 / 8; // 7th rank (6)
+    int kingX = 60 % 8;  // e file (4)
+    int kingY = 60 / 8;  // 8th rank (7)
+
+    std::cout << "Queen at (" << queenX << "," << queenY << "), King at (" << kingX << "," << kingY << ")\n";
+
+    // Check if they're on the same diagonal
+    if (abs(queenX - kingX) == abs(queenY - kingY))
+    {
+        std::cout << "They are on the same diagonal! Checking for pieces in between...\n";
+
+        // Direction from queen to king
+        int dx = (kingX > queenX) ? 1 : -1;
+        int dy = (kingY > queenY) ? 1 : -1;
+
+        bool blocked = false;
+        int x = queenX + dx;
+        int y = queenY + dy;
+
+        while (x != kingX && y != kingY)
+        {
+            int square = y * 8 + x;
+            std::cout << "Checking square " << square << " (" << x << "," << y << "): ";
+
+            uint64_t allPieces = checkBoard.whitePawns | checkBoard.whiteKnights | checkBoard.whiteBishops |
+                                 checkBoard.whiteRooks | checkBoard.whiteQueen | checkBoard.whiteKing |
+                                 checkBoard.blackPawns | checkBoard.blackKnights | checkBoard.blackBishops |
+                                 checkBoard.blackRooks | checkBoard.blackQueen | checkBoard.blackKing;
+
+            if (allPieces & (1ULL << square))
+            {
+                std::cout << "BLOCKED by ";
+
+                // Identify the blocking piece
+                if (checkBoard.whitePawns & (1ULL << square))
+                    std::cout << "white pawn";
+                else if (checkBoard.whiteKnights & (1ULL << square))
+                    std::cout << "white knight";
+                else if (checkBoard.whiteBishops & (1ULL << square))
+                    std::cout << "white bishop";
+                else if (checkBoard.whiteRooks & (1ULL << square))
+                    std::cout << "white rook";
+                else if (checkBoard.whiteQueen & (1ULL << square))
+                    std::cout << "white queen";
+                else if (checkBoard.whiteKing & (1ULL << square))
+                    std::cout << "white king";
+                else if (checkBoard.blackPawns & (1ULL << square))
+                    std::cout << "black pawn";
+                else if (checkBoard.blackKnights & (1ULL << square))
+                    std::cout << "black knight";
+                else if (checkBoard.blackBishops & (1ULL << square))
+                    std::cout << "black bishop";
+                else if (checkBoard.blackRooks & (1ULL << square))
+                    std::cout << "black rook";
+                else if (checkBoard.blackQueen & (1ULL << square))
+                    std::cout << "black queen";
+                else if (checkBoard.blackKing & (1ULL << square))
+                    std::cout << "black king";
+
+                std::cout << "\n";
+                blocked = true;
+                break;
+            }
+            else
+            {
+                std::cout << "clear\n";
+            }
+
+            x += dx;
+            y += dy;
+        }
+
+        if (!blocked)
+        {
+            std::cout << "No pieces blocking the diagonal attack!\n";
+        }
+    }
+    else
+    {
+        std::cout << "They are NOT on the same diagonal.\n";
+    }
+
+    if (blackInCheck)
+    {
+        std::cout << "✅ Black king correctly detected in check\n";
+    }
+    else
+    {
+        std::cout << "❌ Failed to detect check on black king\n";
+    }
+
+    // Reset the board for the next tests
+    board.resetBitboards();
+
+    // Test 2: Try to move into check
+    std::cout << "\nTesting move validation (moving into check)...\n";
+    try
+    {
+        // Set up a position where moving would put the king in check
+        board.whiteQueen = 1ULL << 53; // f7
+        board.blackKing = 1ULL << 52;  // e7
+        board.whiteToMove = false;     // Black to move
+
+        board.makeMove(52, 60); // Ke7-e8 (illegal, moves into check)
+        std::cout << "❌ Failed to prevent moving into check\n";
+    }
+    catch (const std::invalid_argument &e)
+    {
+        std::cout << "✅ Successfully prevented moving into check: " << e.what() << "\n";
+    }
+
+    // Test 3: Checkmate detection
+    std::cout << "\nTesting checkmate detection...\n";
+
+    // Create a true checkmate position (king in corner with queen and knight)
+    Board checkmateBoard;
+    checkmateBoard.resetBitboards();
+    checkmateBoard.blackKing = 1ULL << 63;    // h8
+    checkmateBoard.whiteQueen = 1ULL << 47;   // h6 - directly checking the king
+    checkmateBoard.whiteKnights = 1ULL << 45; // f6 - blocking escape to g7
+    checkmateBoard.whiteKing = 1ULL << 0;     // a1 (needed to avoid stalemate)
+    checkmateBoard.whiteToMove = false;       // Black to move
+
+    std::cout << "DEBUG: Checkmate board setup:\n";
+    std::cout << "Black king at h8 (63):\n";
+    checkmateBoard.printBitboard(checkmateBoard.blackKing);
+    std::cout << "White queen at h6 (47):\n";
+    checkmateBoard.printBitboard(checkmateBoard.whiteQueen);
+    std::cout << "White knight at f6 (45):\n";
+    checkmateBoard.printBitboard(checkmateBoard.whiteKnights);
+    std::cout << "White king at a1 (0):\n";
+    checkmateBoard.printBitboard(checkmateBoard.whiteKing);
+    std::cout << "Current player: " << (checkmateBoard.whiteToMove ? "White" : "Black") << "\n";
+
+    // Check if black king is in check
+    bool blackInCheckMate = checkmateBoard.isInCheck(false);
+    std::cout << "Black king in check: " << (blackInCheckMate ? "YES" : "NO") << "\n";
+
+    // Check if current player is in check
+    bool currentPlayerInCheck = checkmateBoard.isCurrentPlayerInCheck();
+    std::cout << "Current player in check: " << (currentPlayerInCheck ? "YES" : "NO") << "\n";
+
+    // Generate all legal moves
+    std::vector<Board::Move> moves = generateMoves(checkmateBoard);
+    std::cout << "Number of legal moves: " << moves.size() << "\n";
+
+    // Print all possible moves
+    std::cout << "All possible moves:\n";
+    for (const Board::Move &move : moves)
+    {
+        std::cout << "  Move from " << move.fromSquare << " to " << move.toSquare;
+        bool leavesInCheck = checkmateBoard.wouldLeaveInCheck(move.fromSquare, move.toSquare);
+        std::cout << " - " << (leavesInCheck ? "leaves in check" : "legal") << "\n";
+    }
+
+    // Check each move to see if it would leave in check
+    bool allMovesLeaveInCheck = true;
+    for (const Board::Move &move : moves)
+    {
+        if (!checkmateBoard.wouldLeaveInCheck(move.fromSquare, move.toSquare))
+        {
+            allMovesLeaveInCheck = false;
+            std::cout << "Move from " << move.fromSquare << " to " << move.toSquare << " would not leave in check\n";
+            break;
+        }
+    }
+    std::cout << "All moves leave in check: " << (allMovesLeaveInCheck ? "YES" : "NO") << "\n";
+
+    // Check for checkmate
+    bool isCheckmate = checkmateBoard.isCheckmate();
+    std::cout << "Is checkmate: " << (isCheckmate ? "YES" : "NO") << "\n";
+
+    if (isCheckmate)
+    {
+        std::cout << "✅ Checkmate correctly detected\n";
+    }
+    else
+    {
+        std::cout << "❌ Failed to detect checkmate\n";
+    }
+
+    // Reset the board to initial position for the final test
+    board = Board(); // Create a new board with the default constructor
+}
+
 int main()
 {
     try
@@ -265,6 +499,7 @@ int main()
         testPositionEvaluation(board);
         testMoveGeneration(board);
         testPieceMovement(board);
+        testCheckDetection(board);
 
         // Test move validation
         printTestHeader("Move Validation");

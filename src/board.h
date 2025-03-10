@@ -106,7 +106,7 @@ public:
     void removePiece(int pieceType, int square);
 
     // Debug: prints an 8x8 grid for a given bitboard.
-    void printBitboard(uint64_t bitboard);
+    void printBitboard(uint64_t bitboard) const;
 
     // Zobrist hashing tables
     static uint64_t zobristTable[12][64];
@@ -119,6 +119,49 @@ public:
     // ----------------------------------
     uint64_t calculatePositionKey() const;
     int evaluatePosition() const;
+
+    // ----------------------------------
+    // Check detection
+    // ----------------------------------
+    /**
+     * Returns true if the specified king is in check.
+     * @param isWhiteKing true for white king, false for black king
+     */
+    bool isInCheck(bool isWhiteKing) const;
+
+    /**
+     * Returns true if the current side to move is in check.
+     */
+    bool isCurrentPlayerInCheck() const;
+
+    /**
+     * Returns true if the current position is checkmate.
+     */
+    bool isCheckmate() const;
+
+    /**
+     * Returns true if the current position is stalemate.
+     */
+    bool isStalemate() const;
+
+    /**
+     * Returns true if a move would leave the moving side's king in check.
+     * @param move The move to validate
+     */
+    bool wouldLeaveInCheck(const Move &move) const;
+
+    enum PieceType
+    {
+        NONE,
+        PAWN,
+        KNIGHT,
+        BISHOP,
+        ROOK,
+        QUEEN,
+        KING
+    };
+
+    bool wouldLeaveInCheck(int from, int to, PieceType promotion = NONE) const;
 };
 
 std::vector<Board::Move> generateMoves(Board &board);
