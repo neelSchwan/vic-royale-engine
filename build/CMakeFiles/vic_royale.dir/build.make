@@ -44,19 +44,19 @@ cmake_force:
 SHELL = /bin/sh
 
 # The CMake executable.
-CMAKE_COMMAND = /opt/homebrew/bin/cmake
+CMAKE_COMMAND = /usr/local/bin/cmake
 
 # The command to remove a file.
-RM = /opt/homebrew/bin/cmake -E rm -f
+RM = /usr/local/bin/cmake -E rm -f
 
 # Escaping for special characters.
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /Users/rickyr/Documents/GitHub/vic-royale-engine
+CMAKE_SOURCE_DIR = /Users/neelsawant/Desktop/vic-royale-engine
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /Users/rickyr/Documents/GitHub/vic-royale-engine/build
+CMAKE_BINARY_DIR = /Users/neelsawant/Desktop/vic-royale-engine/build
 
 # Include any dependencies generated for this target.
 include CMakeFiles/vic_royale.dir/depend.make
@@ -73,46 +73,46 @@ CMakeFiles/vic_royale.dir/codegen:
 .PHONY : CMakeFiles/vic_royale.dir/codegen
 
 CMakeFiles/vic_royale.dir/src/main.cpp.o: CMakeFiles/vic_royale.dir/flags.make
-CMakeFiles/vic_royale.dir/src/main.cpp.o: /Users/rickyr/Documents/GitHub/vic-royale-engine/src/main.cpp
+CMakeFiles/vic_royale.dir/src/main.cpp.o: /Users/neelsawant/Desktop/vic-royale-engine/src/main.cpp
 CMakeFiles/vic_royale.dir/src/main.cpp.o: CMakeFiles/vic_royale.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/rickyr/Documents/GitHub/vic-royale-engine/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/vic_royale.dir/src/main.cpp.o"
-	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/vic_royale.dir/src/main.cpp.o -MF CMakeFiles/vic_royale.dir/src/main.cpp.o.d -o CMakeFiles/vic_royale.dir/src/main.cpp.o -c /Users/rickyr/Documents/GitHub/vic-royale-engine/src/main.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/neelsawant/Desktop/vic-royale-engine/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/vic_royale.dir/src/main.cpp.o"
+	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/vic_royale.dir/src/main.cpp.o -MF CMakeFiles/vic_royale.dir/src/main.cpp.o.d -o CMakeFiles/vic_royale.dir/src/main.cpp.o -c /Users/neelsawant/Desktop/vic-royale-engine/src/main.cpp
 
 CMakeFiles/vic_royale.dir/src/main.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/vic_royale.dir/src/main.cpp.i"
-	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/rickyr/Documents/GitHub/vic-royale-engine/src/main.cpp > CMakeFiles/vic_royale.dir/src/main.cpp.i
+	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/neelsawant/Desktop/vic-royale-engine/src/main.cpp > CMakeFiles/vic_royale.dir/src/main.cpp.i
 
 CMakeFiles/vic_royale.dir/src/main.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/vic_royale.dir/src/main.cpp.s"
-	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/rickyr/Documents/GitHub/vic-royale-engine/src/main.cpp -o CMakeFiles/vic_royale.dir/src/main.cpp.s
+	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/neelsawant/Desktop/vic-royale-engine/src/main.cpp -o CMakeFiles/vic_royale.dir/src/main.cpp.s
 
 CMakeFiles/vic_royale.dir/src/board.cpp.o: CMakeFiles/vic_royale.dir/flags.make
-CMakeFiles/vic_royale.dir/src/board.cpp.o: /Users/rickyr/Documents/GitHub/vic-royale-engine/src/board.cpp
+CMakeFiles/vic_royale.dir/src/board.cpp.o: /Users/neelsawant/Desktop/vic-royale-engine/src/board.cpp
 CMakeFiles/vic_royale.dir/src/board.cpp.o: CMakeFiles/vic_royale.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/rickyr/Documents/GitHub/vic-royale-engine/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/vic_royale.dir/src/board.cpp.o"
-	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/vic_royale.dir/src/board.cpp.o -MF CMakeFiles/vic_royale.dir/src/board.cpp.o.d -o CMakeFiles/vic_royale.dir/src/board.cpp.o -c /Users/rickyr/Documents/GitHub/vic-royale-engine/src/board.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/neelsawant/Desktop/vic-royale-engine/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/vic_royale.dir/src/board.cpp.o"
+	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/vic_royale.dir/src/board.cpp.o -MF CMakeFiles/vic_royale.dir/src/board.cpp.o.d -o CMakeFiles/vic_royale.dir/src/board.cpp.o -c /Users/neelsawant/Desktop/vic-royale-engine/src/board.cpp
 
 CMakeFiles/vic_royale.dir/src/board.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/vic_royale.dir/src/board.cpp.i"
-	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/rickyr/Documents/GitHub/vic-royale-engine/src/board.cpp > CMakeFiles/vic_royale.dir/src/board.cpp.i
+	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/neelsawant/Desktop/vic-royale-engine/src/board.cpp > CMakeFiles/vic_royale.dir/src/board.cpp.i
 
 CMakeFiles/vic_royale.dir/src/board.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/vic_royale.dir/src/board.cpp.s"
-	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/rickyr/Documents/GitHub/vic-royale-engine/src/board.cpp -o CMakeFiles/vic_royale.dir/src/board.cpp.s
+	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/neelsawant/Desktop/vic-royale-engine/src/board.cpp -o CMakeFiles/vic_royale.dir/src/board.cpp.s
 
 CMakeFiles/vic_royale.dir/src/fen.cpp.o: CMakeFiles/vic_royale.dir/flags.make
-CMakeFiles/vic_royale.dir/src/fen.cpp.o: /Users/rickyr/Documents/GitHub/vic-royale-engine/src/fen.cpp
+CMakeFiles/vic_royale.dir/src/fen.cpp.o: /Users/neelsawant/Desktop/vic-royale-engine/src/fen.cpp
 CMakeFiles/vic_royale.dir/src/fen.cpp.o: CMakeFiles/vic_royale.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/rickyr/Documents/GitHub/vic-royale-engine/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/vic_royale.dir/src/fen.cpp.o"
-	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/vic_royale.dir/src/fen.cpp.o -MF CMakeFiles/vic_royale.dir/src/fen.cpp.o.d -o CMakeFiles/vic_royale.dir/src/fen.cpp.o -c /Users/rickyr/Documents/GitHub/vic-royale-engine/src/fen.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/neelsawant/Desktop/vic-royale-engine/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/vic_royale.dir/src/fen.cpp.o"
+	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/vic_royale.dir/src/fen.cpp.o -MF CMakeFiles/vic_royale.dir/src/fen.cpp.o.d -o CMakeFiles/vic_royale.dir/src/fen.cpp.o -c /Users/neelsawant/Desktop/vic-royale-engine/src/fen.cpp
 
 CMakeFiles/vic_royale.dir/src/fen.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/vic_royale.dir/src/fen.cpp.i"
-	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/rickyr/Documents/GitHub/vic-royale-engine/src/fen.cpp > CMakeFiles/vic_royale.dir/src/fen.cpp.i
+	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/neelsawant/Desktop/vic-royale-engine/src/fen.cpp > CMakeFiles/vic_royale.dir/src/fen.cpp.i
 
 CMakeFiles/vic_royale.dir/src/fen.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/vic_royale.dir/src/fen.cpp.s"
-	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/rickyr/Documents/GitHub/vic-royale-engine/src/fen.cpp -o CMakeFiles/vic_royale.dir/src/fen.cpp.s
+	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/neelsawant/Desktop/vic-royale-engine/src/fen.cpp -o CMakeFiles/vic_royale.dir/src/fen.cpp.s
 
 # Object files for target vic_royale
 vic_royale_OBJECTS = \
@@ -128,7 +128,7 @@ bin/vic_royale: CMakeFiles/vic_royale.dir/src/board.cpp.o
 bin/vic_royale: CMakeFiles/vic_royale.dir/src/fen.cpp.o
 bin/vic_royale: CMakeFiles/vic_royale.dir/build.make
 bin/vic_royale: CMakeFiles/vic_royale.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/Users/rickyr/Documents/GitHub/vic-royale-engine/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Linking CXX executable bin/vic_royale"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/Users/neelsawant/Desktop/vic-royale-engine/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Linking CXX executable bin/vic_royale"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/vic_royale.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
@@ -140,6 +140,6 @@ CMakeFiles/vic_royale.dir/clean:
 .PHONY : CMakeFiles/vic_royale.dir/clean
 
 CMakeFiles/vic_royale.dir/depend:
-	cd /Users/rickyr/Documents/GitHub/vic-royale-engine/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /Users/rickyr/Documents/GitHub/vic-royale-engine /Users/rickyr/Documents/GitHub/vic-royale-engine /Users/rickyr/Documents/GitHub/vic-royale-engine/build /Users/rickyr/Documents/GitHub/vic-royale-engine/build /Users/rickyr/Documents/GitHub/vic-royale-engine/build/CMakeFiles/vic_royale.dir/DependInfo.cmake "--color=$(COLOR)"
+	cd /Users/neelsawant/Desktop/vic-royale-engine/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /Users/neelsawant/Desktop/vic-royale-engine /Users/neelsawant/Desktop/vic-royale-engine /Users/neelsawant/Desktop/vic-royale-engine/build /Users/neelsawant/Desktop/vic-royale-engine/build /Users/neelsawant/Desktop/vic-royale-engine/build/CMakeFiles/vic_royale.dir/DependInfo.cmake "--color=$(COLOR)"
 .PHONY : CMakeFiles/vic_royale.dir/depend
 

@@ -8,9 +8,9 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/Users/rickyr/Documents/GitHub/vic-royale-engine/src/board.cpp" "CMakeFiles/vic_royale.dir/src/board.cpp.o" "gcc" "CMakeFiles/vic_royale.dir/src/board.cpp.o.d"
-  "/Users/rickyr/Documents/GitHub/vic-royale-engine/src/fen.cpp" "CMakeFiles/vic_royale.dir/src/fen.cpp.o" "gcc" "CMakeFiles/vic_royale.dir/src/fen.cpp.o.d"
-  "/Users/rickyr/Documents/GitHub/vic-royale-engine/src/main.cpp" "CMakeFiles/vic_royale.dir/src/main.cpp.o" "gcc" "CMakeFiles/vic_royale.dir/src/main.cpp.o.d"
+  "/Users/neelsawant/Desktop/vic-royale-engine/src/board.cpp" "CMakeFiles/vic_royale.dir/src/board.cpp.o" "gcc" "CMakeFiles/vic_royale.dir/src/board.cpp.o.d"
+  "/Users/neelsawant/Desktop/vic-royale-engine/src/fen.cpp" "CMakeFiles/vic_royale.dir/src/fen.cpp.o" "gcc" "CMakeFiles/vic_royale.dir/src/fen.cpp.o.d"
+  "/Users/neelsawant/Desktop/vic-royale-engine/src/main.cpp" "CMakeFiles/vic_royale.dir/src/main.cpp.o" "gcc" "CMakeFiles/vic_royale.dir/src/main.cpp.o.d"
   )
 
 # Targets to which this target links which contain Fortran sources.

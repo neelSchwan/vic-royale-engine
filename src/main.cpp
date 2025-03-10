@@ -89,13 +89,13 @@ void testMoveGeneration(Board &board)
     printTestHeader("Move Generation");
 
     // Test initial position move counts at various depths
-    for (int depth = 1; depth <= 3; depth++)
+    for (int depth = 1; depth <= 5; depth++)
     {
         uint64_t nodes = perft(board, depth);
         std::cout << "Perft(" << depth << ") = " << nodes << " nodes\n";
 
         // Known correct values for initial position
-        uint64_t expected[] = {20, 400, 8902};
+        uint64_t expected[] = {20, 400, 8902, 197281, 4865609};
         if (nodes == expected[depth - 1])
         {
             std::cout << "✅ Depth " << depth << " correct\n";
